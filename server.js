@@ -9,6 +9,8 @@ const PORT = 8000;
 const app = express();
 app.set('view engine', 'ejs');
 app.set('views', './views');
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 const server = http.createServer(app);
 const wss = new ws.Server({ server: server });
@@ -29,13 +31,25 @@ function lobbyEJS(res) {
     return res.render('lobby/lobby', {});
 }
 
+// Args should be just [<username>]
+function pregameEJS(res, args) {
+    // TODO: filter properly the username
+
+    return res.render('pregame/pregame', {username: args[0]})
+}
+
 // Function to just handle routing of EJS files
 // Expects files in the form of: <name>.ejs
-function resolveEJS(pathName, res) {
+// Takes in an array of args to pass onto the EJS resolver
+function resolveEJS(pathName, res, args) {
     // TODO: update this to work with subdirectories?
     switch (pathName) {
         case "views/lobby/lobby.ejs":
             lobbyEJS(res);
+            return false;
+
+        case "views/pregame/pregame.ejs":
+            pregameEJS(res, args);
             return false;
         
         default:
@@ -89,7 +103,7 @@ app.get('/*', (req, res) => {
             }
         }
 
-        if (resolveEJS(filePath.slice(2), res)) {
+        if (resolveEJS(filePath.slice(2), res, [])) {
             res.status(404);
             return res.send("Attempting to access unknown files");
         }
@@ -99,6 +113,46 @@ app.get('/*', (req, res) => {
     }
 });
 
+app.post('/*', (req, res) => {
+    switch(req.path) {
+        case '/pregame/new_game':
+            if (resolveEJS('views/pregame/pregame.ejs', res, [req.body.username])) {
+                res.status(404);
+                return res.send("Attempting to access unknown files");
+            }   
+            break; 
+
+        default:
+            res.status(404);
+            return res.send("Attempting to access unknown files");  
+    }
+});
+
 server.listen(PORT, () => {
     console.log("Server is up!");
 });
+
+
+/*
+ * Game mechanics managed by the server
+ */
+
+class GameAttributes {
+    constructor(name) {
+        this.name = name;
+        this.cur_players = 1;
+        this.max_players = 5;
+    }
+
+    get name() {
+        return this.name;
+    }
+
+    get cur_players() {
+        return this.cur_players;
+    }
+
+    get max_players() {
+        return this.max_players;
+    }
+}

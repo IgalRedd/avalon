@@ -9,5 +9,8 @@ socket.addEventListener('message', (message) => {
 
 
 function newGame() {
-    
+    // TODO: do some processing on the username (recommend to extract this to another function to reuse for joining)
+    // The rest of this assumes that the whole thing passed and username is valid
+
+    document.getElementById('newGameForm').submit();
 }
