@@ -1,4 +1,3 @@
-//const ejs = require('ejs');
 const express = require('express');
 const ws = require('ws');
 const fs = require('fs');
@@ -13,6 +12,18 @@ app.set('views', './views');
 
 const server = http.createServer(app);
 const wss = new ws.Server({ server: server });
+
+/*
+ * This will handle API calls
+ * All API calls will be in the format of: API <name>:<data>
+ */
+wss.on('connect', (socket) => {
+    wss.on('message', (message) => {
+        ; // Nothing yet, this will handle API calls
+    });
+});
+
+
 
 function lobbyEJS(res) {
     return res.render('lobby', {});
