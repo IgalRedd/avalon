@@ -6,3 +6,8 @@ const socket = new WebSocket(`ws://${host}` + port);
 socket.addEventListener('message', (message) => {
     ; // Nothing yet
 });
+
+
+function newGame() {
+    
+}

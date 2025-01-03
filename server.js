@@ -26,7 +26,7 @@ wss.on('connect', (socket) => {
 
 
 function lobbyEJS(res) {
-    return res.render('lobby', {});
+    return res.render('lobby/lobby', {});
 }
 
 // Function to just handle routing of EJS files
@@ -34,7 +34,7 @@ function lobbyEJS(res) {
 function resolveEJS(pathName, res) {
     // TODO: update this to work with subdirectories?
     switch (pathName) {
-        case "views/lobby.ejs":
+        case "views/lobby/lobby.ejs":
             lobbyEJS(res);
             return false;
         
@@ -64,7 +64,7 @@ app.get('/*', (req, res) => {
 
         // Change it to make the logic easier later
         if (filePath == "./views/") {
-            filePath = "./views/lobby.ejs";
+            filePath = "./views/lobby/lobby.ejs";
         }
 
         // This means we know its a file that we have!
