@@ -3,6 +3,7 @@ const ws = require('ws');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const { URL } = require('url');
 
 const PORT = 8000;
 
@@ -13,28 +14,57 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 const server = http.createServer(app);
-const wss = new ws.Server({ server: server });
+const wss = new ws.Server({ server:server });
 
 /*
  * This will handle API calls
- * All API calls will be in the format of: API <name>:<data>
+ * All API calls will be in the format of: API <name>;<data>
  */
-wss.on('connect', (socket) => {
-    wss.on('message', (message) => {
+
+// note: get a better URL parser and when the websocket for the pregame connects it should send the room + name (use the onload function to make the websocket connect => we cna know the name)
+wss.on('connection', (socket, request) => {
+    // URL parser, add the dummy URL to properly parse the arguements
+    let url = new URL(request.url, 'http://dummy.ca');
+    
+    switch(url.pathname) {
+        case "/lobby":
+            socket.room = "lobby";
+            break;
+        
+        case "/pregame":
+            socket.room = "pregame";
+            break;
+    }
+
+    socket.on('message', (message) => {
         ; // Nothing yet, this will handle API calls
+    });
+
+    socket.on('close', () => {
+        // TODO: kick sockets out of arrays
     });
 });
 
 
-
 function lobbyEJS(res) {
-    return res.render('lobby/lobby', {});
+    return res.render('lobby/lobby', {unreadyGames: notStartedGames});
 }
 
 // Args should be just [<username>]
 function pregameEJS(res, args) {
     // TODO: filter properly the username
 
+    let game = new GameAttributes(args[0]);
+    // Add the game to the list
+    notStartedGames.push(game);
+
+    // Inform the players in the lobby of the new game
+    wss.clients.forEach((client) => {
+        if (client.room == "lobby") {
+            client.send("API new_game;" + JSON.stringify(game));
+        }
+    });
+        
     return res.render('pregame/pregame', {username: args[0]})
 }
 
@@ -137,22 +167,25 @@ server.listen(PORT, () => {
  * Game mechanics managed by the server
  */
 
+runningGames = [];
+notStartedGames = [];
+
 class GameAttributes {
     constructor(name) {
-        this.name = name;
-        this.cur_players = 1;
-        this.max_players = 5;
+        this._name = name;
+        this._cur_players = 1;
+        this._max_players = 5;
     }
 
     get name() {
-        return this.name;
+        return this._name;
     }
 
     get cur_players() {
-        return this.cur_players;
+        return this._cur_players;
     }
 
     get max_players() {
-        return this.max_players;
+        return this._max_players;
     }
 }
