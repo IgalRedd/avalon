@@ -4,16 +4,18 @@
     <head>
         <link rel="stylesheet" href="/lobby/lobby_css.css">
         <script src="/lobby/lobby_script.js"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </head>
 
     <body>
-        <h1>Avalon</h1>
+        <h1 class="item">Avalon</h1>
 
         <form action="/pregame/new_game" method="post" id="newGameForm">
-            <input type="text" id="username" name="username">
+            <input type="text" id="username" name="username" class="item">
         </form>
 
-        <button type="button" onclick="newGame()">Create new game</button>
+        <button type="button" onclick="newGame()" class="item">Create new game</button>
 
         <br>
 

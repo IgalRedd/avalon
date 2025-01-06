@@ -1,0 +1,25 @@
+html {
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+}
+
+.item {
+    flex: 20%;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
+}
+
+#games {
+    flex: 40%;
+
+    border: 2px solid black;
+
+    width: 60vw;
+    height: 75vh;
+
+    overflow-y: auto;
+}
