@@ -11,8 +11,11 @@
     <body>
         <h1 class="item">Avalon</h1>
 
+        <label>Enter User Name</label>
+
         <form action="/pregame/new_game" method="post" id="newGameForm">
             <input type="text" id="username" name="username" class="item">
+            <div id="error-message" style="color: red;"> <%= errorMessage %></div>
         </form>
 
         <button type="button" onclick="newGame()" class="item">Create new game</button>

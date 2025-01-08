@@ -23,3 +23,11 @@ html {
 
     overflow-y: auto;
 }
+
+#error-message {
+    color: red;
+    margin-top: 1vh;
+    font-size: 1em;
+    text-align: center; 
+    width: 100%; 
+}

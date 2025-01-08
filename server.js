@@ -46,15 +46,27 @@ wss.on('connection', (socket, request) => {
 });
 
 
-function lobbyEJS(res) {
-    return res.render('lobby/lobby', {unreadyGames: notStartedGames});
+function lobbyEJS(res, errorMessage = "") {
+    return res.render('lobby/lobby', { unreadyGames: notStartedGames, errorMessage: errorMessage });
 }
 
 // Args should be just [<username>]
 function pregameEJS(res, args) {
-    // TODO: filter properly the username
+    let username = args[0].trim(); // Trim the username
+    let errorMessage = "";
 
-    let game = new GameAttributes(args[0]);
+    // Validate the username
+    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
+        errorMessage = "Error: '<', '>', ':' and ';' symbols are not accepted.";
+        return lobbyEJS(res, errorMessage);
+    }
+
+    if (username.length >= 16 || username.length === 0) {
+        errorMessage = "Error: Username cannot be empty or longer than 16 characters.";
+        return lobbyEJS(res, errorMessage);
+    }
+
+    let game = new GameAttributes(username);
     // Add the game to the list
     notStartedGames.push(game);
 
@@ -64,9 +76,10 @@ function pregameEJS(res, args) {
             client.send("API new_game;" + JSON.stringify(game));
         }
     });
-        
-    return res.render('pregame/pregame', {username: args[0]})
+
+    return res.render('pregame/pregame', { username: username });
 }
+
 
 // Function to just handle routing of EJS files
 // Expects files in the form of: <name>.ejs
