@@ -34,26 +34,41 @@ socket.addEventListener('message', (message) => {
     }
 });
 
+function isValidUsername(username) {
+    // Trim the username
+    username = username.trim();
+
+    // Check username for invalid characters
+    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
+        return false;
+    }
+
+    // Check username for invalid length
+    if (username.length >= 16 || username.length === 0) {
+        return false;
+    }
+
+    return true;
+}
+
 
 function newGame() {
-    // TODO: do some processing on the username (recommend to extract this to another function to reuse for joining)
-    // The rest of this assumes that the whole thing passed and username is valid
-
     let username = document.getElementById('username').value;
-    // username = username.trim();
     const errorMessageElement = document.getElementById('error-message');
 
     // Clear any previous error messages
     errorMessageElement.innerHTML = '';
 
-    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':'))  {
-        errorMessageElement.innerHTML = "Error: '<', '>', ':' and ';' symbols are not accepted.";
+    // Use the validation function
+    if (!isValidUsername(username)) {
+        if (username.trim().length != 0) {
+            errorMessageElement.innerHTML = "Error: '<', '>', ':', and ';' symbols are not accepted.";
+            return
+        }
+        else {
+        errorMessageElement.innerHTML = "Error: Username cannot be empty or longer than 16 characters.";
         return;
-    }
-
-    if (username.length >= 16 || username.length == 0)  {
-        errorMessageElement.innerHTML = "Error: Username can not be empty or longer than 16 characters.";
-        return;
+        }
     }
 
     document.getElementById('newGameForm').submit();
