@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
-const { notStrictEqual, notDeepStrictEqual } = require('assert');
 
 const PORT = 8000;
 
