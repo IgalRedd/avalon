@@ -24,6 +24,17 @@ html {
     overflow-y: auto;
 }
 
+
+.specific_game {
+    display: flex;
+
+    justify-content: center;
+}
+
+.specific_game button {
+    margin-left: 2vw;
+}
+  
 #error-message {
     color: red;
     margin-top: 1vh;

@@ -20,11 +20,17 @@
 
         <button type="button" onclick="newGame()" class="item">Create new game</button>
 
-        <br>
+        <form action="/pregame/join_game" method="post" id="joinGameForm">
+            <input type="hidden" id="joining_username" name="joining_username">
+            <input type="hidden" id="own_username" name="username">
+        </form>
 
         <div id="games">
             <% for(let i = 0; i < unreadyGames.length; i++) { %>
-                <p> <%= unreadyGames[i].name %> : <%= unreadyGames[i].cur_players %> / <%= unreadyGames[i].max_players %> </p>
+                <div class="specific_game">
+                    <p><%= unreadyGames[i].name %> : <%= unreadyGames[i].cur_players %> / <%= unreadyGames[i].max_players %> </p>
+                    <button onclick="joinGame('<%= unreadyGames[i].name %>')">Join</button>
+                </div>
             <% } %>
         </div>
     </body>
