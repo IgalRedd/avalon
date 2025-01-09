@@ -24,6 +24,7 @@ html {
     overflow-y: auto;
 }
 
+
 .specific_game {
     display: flex;
 
@@ -32,4 +33,12 @@ html {
 
 .specific_game button {
     margin-left: 2vw;
+}
+  
+#error-message {
+    color: red;
+    margin-top: 1vh;
+    font-size: 1em;
+    text-align: center; 
+    width: 100%; 
 }
