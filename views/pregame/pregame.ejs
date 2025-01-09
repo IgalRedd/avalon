@@ -18,4 +18,19 @@
         <p>Players: <%= game._name %></p>
         <p id="other_players">Other players: <%= game.current_players.join(', ') %></p>
     </body>
+
+    <% if (game._name == myUsername) {%>
+    <div id="lobby-size-controls">
+        <p>Select Lobby Size:</p>
+        <div>
+            <label><input type="radio" name="lobbySize" value="5" onchange="changeMaxsize(5)" checked> 5 Players</label><br>
+            <label><input type="radio" name="lobbySize" value="6" onchange="changeMaxsize(6)"> 6 Players</label><br>
+            <label><input type="radio" name="lobbySize" value="7" onchange="changeMaxsize(7)"> 7 Players</label><br>
+            <label><input type="radio" name="lobbySize" value="8" onchange="changeMaxsize(8)"> 8 Players</label><br>
+            <label><input type="radio" name="lobbySize" value="9" onchange="changeMaxsize(9)"> 9 Players</label><br>
+            <label><input type="radio" name="lobbySize" value="10" onchange="changeMaxsize(10)"> 10 Players</label>
+        </div>
+    </div>
+    <% }%>
+    
 </html>

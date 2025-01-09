@@ -65,6 +65,10 @@ function changeMaxsize(new_max_size) {
     // Gets the name of the game owner from the H1 tag
     let game_owner = document.getElementById('username').value;
 
+    if (game_owner != document.getElementById('owner').value) {
+        return;
+    }
+
     // Update our statistics
     document.getElementById('max_players').value = new_max_size;
 
