@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <link rel="stylesheet" href="/lobby/lobby_css.css">
+        <script src="/lobby/lobby_script.js"></script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    </head>
+
+    <body>
+        <h1 class="item">Avalon</h1>
+
+        <label>Enter User Name</label>
+
+        <form action="/pregame/new_game" method="post" id="newGameForm">
+            <input type="text" id="username" name="username" class="item">
+            <div id="error-message" style="color: red;"> <%= errorMessage %></div>
+        </form>
+
+        <button type="button" onclick="newGame()" class="item">Create new game</button>
+
+        <form action="/pregame/join_game" method="post" id="joinGameForm">
+            <input type="hidden" id="joining_username" name="joining_username">
+            <input type="hidden" id="own_username" name="username">
+        </form>
+
+        <div id="games">
+            <% for(let i = 0; i < unreadyGames.length; i++) { %>
+                <div class="specific_game">
+                    <p><%= unreadyGames[i].name %> : <%= unreadyGames[i].cur_players %> / <%= unreadyGames[i].max_players %> </p>
+                    <button onclick="joinGame('<%= unreadyGames[i].name %>')">Join</button>
+                </div>
+            <% } %>
+        </div>
+    </body>
+</html>

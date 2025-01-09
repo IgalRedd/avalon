@@ -1,0 +1,44 @@
+html {
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+}
+
+.item {
+    flex: 20%;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
+}
+
+#games {
+    flex: 40%;
+
+    border: 2px solid black;
+
+    width: 60vw;
+    height: 75vh;
+
+    overflow-y: auto;
+}
+
+
+.specific_game {
+    display: flex;
+
+    justify-content: center;
+}
+
+.specific_game button {
+    margin-left: 2vw;
+}
+  
+#error-message {
+    color: red;
+    margin-top: 1vh;
+    font-size: 1em;
+    text-align: center; 
+    width: 100%; 
+}

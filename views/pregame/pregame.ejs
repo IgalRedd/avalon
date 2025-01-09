@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <link rel="stylesheet" href="/pregame/pregame_css.css">
+        <script src="/pregame/pregame_script.js"></script>
+    </head>
+
+    <body>
+        <form>
+            <input type="hidden" value="<%= myUsername %>" id="username">
+        </form>
+
+        <h1 id="banner"><%= username %>'s Game</h1>
+        <p>Players: <%= username %></p>
+        <p id="other_players">Other players: <%= otherPlayers.join(', ') %></p>
+    </body>
+</html>
