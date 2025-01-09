@@ -88,7 +88,7 @@ function isValidUsername(username) {
     if (username.length >= 16 || username.length === 0) {
         return false;
     }
-
+    
     return true;
 }
 
@@ -116,10 +116,23 @@ function newGame() {
 }
 
 function joinGame(game_name) {
-    // TODO: same filtering on the username
-
     // Grab username
     let own_username = document.getElementById('username').value;
+    const errorMessageElement = document.getElementById('error-message');
+
+    // Clear any previous error messages
+    errorMessageElement.innerHTML = '';
+
+    if (!isValidUsername(own_username)) {
+        if (own_username.trim().length != 0) {
+            errorMessageElement.innerHTML = "Error: '<', '>', ':', and ';' symbols are not accepted.";
+            return
+        }
+        else {
+        errorMessageElement.innerHTML = "Error: Username cannot be empty or longer than 16 characters.";
+        return;
+        }
+    }
     
     // Fill out hidden form values
     document.getElementById('own_username').value = own_username;

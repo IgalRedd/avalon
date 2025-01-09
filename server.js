@@ -53,6 +53,9 @@ wss.on('connection', (socket, request) => {
                 return;
             }
 
+            let userIndex = storedUsernames.indexOf(socket.user);
+            storedUsernames.splice(userIndex, 1);
+
             let game = notStartedGames[index];
             // If this is true we need to delete the game
             if (game.cur_players == 1) {
@@ -82,6 +85,30 @@ wss.on('connection', (socket, request) => {
     });
 });
 
+function isValidUsername(username) {
+    // Trim the username
+    username = username.trim();
+
+    // Check username for invalid characters
+    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
+        return "Error: '<', '>', ':' and ';' symbols are not accepted.";
+    }
+
+    // Check username for invalid length
+    if (username.length >= 16 || username.length === 0) {
+        return "Error: Username cannot be empty or longer than 16 characters.";
+    }
+
+    console.log(storedUsernames);
+
+    // Check for duplicate usernames
+    if (storedUsernames.includes(username)) {
+        return "Error: Username already in use, please try again.";
+    }
+
+    return "";
+}
+
 
 function lobbyEJS(res, errorMessage = "") {
     return res.render('lobby/lobby', { unreadyGames: notStartedGames, errorMessage: errorMessage });
@@ -90,18 +117,13 @@ function lobbyEJS(res, errorMessage = "") {
 // Args should be just [<username>]
 function pregameEJS(res, args) {
     let username = args[0].trim(); // Trim the username
-    let errorMessage = "";
+    let errorMessage = isValidUsername(args[0]);
 
-    // Validate the username
-    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
-        errorMessage = "Error: '<', '>', ':' and ';' symbols are not accepted.";
+    if (errorMessage != "") {
         return lobbyEJS(res, errorMessage);
     }
 
-    if (username.length >= 16 || username.length === 0) {
-        errorMessage = "Error: Username cannot be empty or longer than 16 characters.";
-        return lobbyEJS(res, errorMessage);
-    }
+    storedUsernames.push(username);
 
     let game = new GameAttributes(username);
     // Add the game to the list
@@ -118,16 +140,24 @@ function pregameEJS(res, args) {
 }
 
 function joinGameEJS(res, args) {
-    // TODO: filter name
+
+    let username = args[0].trim(); // Trim the username
+    let errorMessage = isValidUsername(args[0]);
+
+    if (errorMessage != "") {
+        return lobbyEJS(res, errorMessage);
+    }
 
     // update the lobby, update the person's game, load in the thing
     let index = searchArray(args[1], notStartedGames);
     let game = notStartedGames[index];
     
     if (!game.addPlayer(args[0])) {
-        lobbyEJS(res);
+        lobbyEJS(res, "Error: Game is full");
         return;
     }
+
+    storedUsernames.push(username);
 
     wss.clients.forEach((client) => {
         // Update the players in the pregame with the new player
@@ -258,6 +288,7 @@ server.listen(PORT, () => {
 
 runningGames = [];
 notStartedGames = [];
+storedUsernames = [];
 
 // Searches given array of games (important) by name
 // Returns index or -1
