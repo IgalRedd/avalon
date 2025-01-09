@@ -9,10 +9,13 @@
     <body>
         <form>
             <input type="hidden" value="<%= myUsername %>" id="username">
+            <input type="hidden" value="<%= game._name %>" id="owner">
+            <input type="hidden" value="<%= game._max_players %>" id="max_players">
         </form>
 
-        <h1 id="banner"><%= username %>'s Game</h1>
-        <p>Players: <%= username %></p>
-        <p id="other_players">Other players: <%= otherPlayers.join(', ') %></p>
+        <h1 id="banner"><%= game._name %>'s Game</h1>
+        <p id="counter-display"><%= game._cur_players %> / <%= game._max_players %></p>
+        <p>Players: <%= game._name %></p>
+        <p id="other_players">Other players: <%= game.current_players.join(', ') %></p>
     </body>
 </html>
