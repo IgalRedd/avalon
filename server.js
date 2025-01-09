@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
-const { notStrictEqual } = require('assert');
+const { notStrictEqual, notDeepStrictEqual } = require('assert');
 
 const PORT = 8000;
 
@@ -40,7 +40,39 @@ wss.on('connection', (socket, request) => {
     }
 
     socket.on('message', (message) => {
-        ; // Nothing yet, this will handle API calls
+        let data = message.toString().split(';');
+        let params = data[0].split(' ');
+    
+        if (params[0] !== "API") {
+            return;
+        }
+
+        switch(params[1]) {
+            case "update_player_numbers":
+                // Get the game index
+                let args = data[1].split(',');
+                let index = searchArray(args[0], notStartedGames);
+
+                if (index == -1) {
+                    return;
+                }
+
+                // Get actual game and set the new max
+                let game = notStartedGames[index];
+                game.max_players = args[1];
+
+                // Tell the lobby players about it
+                wss.clients.forEach((client) => {
+                    // Update lobby players
+                    if (client.room == "lobby") {
+                        client.send("API update_player_numbers;" + [game.name, game.cur_players, game.max_players].join(','))
+                    } else if (client.room == "pregame" && client.lobby == game.name) {
+                        // Update the other players in the pregame
+                        client.send("API update_player_count;" + [game.cur_players, game.max_players].join(','));
+                    }
+                });
+                break;
+        }
     });
 
     socket.on('close', () => {
@@ -136,11 +168,10 @@ function pregameEJS(res, args) {
         }
     });
   
-    return res.render('pregame/pregame', {username: args[0], otherPlayers: [], myUsername: args[0]})
+    return res.render('pregame/pregame', {game: game, myUsername: args[0]})
 }
 
 function joinGameEJS(res, args) {
-
     let username = args[0].trim(); // Trim the username
     let errorMessage = isValidUsername(args[0]);
 
@@ -169,7 +200,7 @@ function joinGameEJS(res, args) {
         }
     });
 
-    return res.render('pregame/pregame', {username: game.name, otherPlayers: game.otherPlayers, myUsername: args[0]});
+    return res.render('pregame/pregame', {game: game, myUsername: args[0]});
 
 }
 
@@ -325,6 +356,12 @@ class GameAttributes {
 
     get otherPlayers() {
         return this.current_players;
+    }
+
+    set max_players(new_max) {
+        if (new_max >= 5 && new_max <= 10) {
+            this._max_players = new_max;
+        }
     }
 
     addPlayer(new_name) {
