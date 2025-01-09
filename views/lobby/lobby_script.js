@@ -57,7 +57,6 @@ socket.addEventListener('message', (message) => {
             break;
         
         case "update_player_numbers":
-            console.log(`updating nums: ${data[1]}`);
             let names2 = document.getElementById('games').querySelectorAll('p');
             let args = data[1].split(','); // Passed in data is array
 
@@ -88,7 +87,7 @@ function isValidUsername(username) {
     if (username.length >= 16 || username.length === 0) {
         return false;
     }
-    
+
     return true;
 }
 

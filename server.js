@@ -56,6 +56,8 @@ wss.on('connection', (socket, request) => {
             let userIndex = storedUsernames.indexOf(socket.user);
             storedUsernames.splice(userIndex, 1);
 
+            //TO DO: Ensure that if host leaves, game does not crash (for now host is permantly stuck in lobby)
+
             let game = notStartedGames[index];
             // If this is true we need to delete the game
             if (game.cur_players == 1) {
@@ -98,8 +100,6 @@ function isValidUsername(username) {
     if (username.length >= 16 || username.length === 0) {
         return "Error: Username cannot be empty or longer than 16 characters.";
     }
-
-    console.log(storedUsernames);
 
     // Check for duplicate usernames
     if (storedUsernames.includes(username)) {
