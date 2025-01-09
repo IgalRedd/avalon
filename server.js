@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
+const { notStrictEqual } = require('assert');
 
 const PORT = 8000;
 
@@ -33,6 +34,8 @@ wss.on('connection', (socket, request) => {
         
         case "/pregame":
             socket.room = "pregame";
+            socket.lobby = url.searchParams.get('lobby');
+            socket.user = url.searchParams.get('username');
             break;
     }
 
@@ -42,6 +45,40 @@ wss.on('connection', (socket, request) => {
 
     socket.on('close', () => {
         // TODO: kick sockets out of arrays
+        if (socket.room == "pregame") {
+            let index = searchArray(socket.lobby, notStartedGames);
+            
+            // Game doesn't exist so stop
+            if (index == -1) {
+                return;
+            }
+
+            let game = notStartedGames[index];
+            // If this is true we need to delete the game
+            if (game.cur_players == 1) {
+                wss.clients.forEach((client) => {
+                    if (client.room == 'lobby') {
+                        client.send("API remove_game;" + game.name);
+                    }
+                });
+
+                notStartedGames.splice(index, 1);
+                return;
+            }
+
+            if (game.removePlayer(socket.user)) {
+                // Update the clients in the pregame lobby to update player list
+                wss.clients.forEach((client) => {
+                    if (client.room == 'pregame' && client.lobby == socket.lobby) {
+                        client.send("API remove_user;" + socket.user);
+                    } else if (client.room == 'lobby') {
+                        // Update the lobby players with the correct count of players in the pregame
+                        client.send("API update_player_numbers;" + [game.name, game.cur_players, game.max_players].join(','))
+                    }
+                });
+            }
+            
+        }
     });
 });
 
@@ -65,7 +102,32 @@ function pregameEJS(res, args) {
         }
     });
         
-    return res.render('pregame/pregame', {username: args[0]})
+    return res.render('pregame/pregame', {username: args[0], otherPlayers: [], myUsername: args[0]})
+}
+
+function joinGameEJS(res, args) {
+    // TODO: filter name
+
+    // update the lobby, update the person's game, load in the thing
+    let index = searchArray(args[1], notStartedGames);
+    let game = notStartedGames[index];
+    
+    if (!game.addPlayer(args[0])) {
+        lobbyEJS(res);
+        return;
+    }
+
+    wss.clients.forEach((client) => {
+        // Update the players in the pregame with the new player
+        if (client.room == "pregame" && client.lobby == args[1]) {
+            client.send("API player_joined;" + args[0]);
+        } else if (client.room == 'lobby') {
+            // Update lobby players with the new correct count
+            client.send("API update_player_numbers;" + [game.name, game.cur_players, game.max_players].join(','))
+        }
+    });
+
+    res.render('pregame/pregame', {username: game.name, otherPlayers: game.otherPlayers, myUsername: args[0]});
 }
 
 // Function to just handle routing of EJS files
@@ -81,11 +143,17 @@ function resolveEJS(pathName, res, args) {
         case "views/pregame/pregame.ejs":
             pregameEJS(res, args);
             return false;
+
+        case "views/pregame/joingame.ejs":
+            joinGameEJS(res, args);
+            return false;
         
         default:
             return true;
     }
 }
+
+// TODO: handle refreshes, specifically check if games have been deleted
 
 app.get('/*', (req, res) => {
     // Security to prevent anyone from accessing your own files or the server
@@ -152,6 +220,13 @@ app.post('/*', (req, res) => {
             }   
             break; 
 
+        case '/pregame/join_game':
+            if (resolveEJS('views/pregame/joingame.ejs', res, [req.body.username, req.body.joining_username])) {
+                res.status(404);
+                return res.send("Attempting to access unknown files");
+            }   
+            break; 
+
         default:
             res.status(404);
             return res.send("Attempting to access unknown files");  
@@ -170,11 +245,25 @@ server.listen(PORT, () => {
 runningGames = [];
 notStartedGames = [];
 
+// Searches given array of games (important) by name
+// Returns index or -1
+function searchArray(gameName, array) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].name == gameName) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 class GameAttributes {
     constructor(name) {
         this._name = name;
         this._cur_players = 1;
         this._max_players = 5;
+
+        this.current_players = [];
     }
 
     get name() {
@@ -188,4 +277,34 @@ class GameAttributes {
     get max_players() {
         return this._max_players;
     }
+
+    get otherPlayers() {
+        return this.current_players;
+    }
+
+    addPlayer(new_name) {
+        if (this._cur_players < this._max_players && !this.current_players.includes(new_name)) {
+            this._cur_players += 1;
+            this.current_players.push(new_name)
+
+            return true;
+        }
+
+        return false;
+    }
+
+    removePlayer(to_remove) {
+        if (this.current_players.includes(to_remove)) {
+            // Removes the player
+            let index = this.current_players.indexOf(to_remove);
+            this.current_players.splice(index, 1);
+
+            this._cur_players -= 1;
+
+            return true;
+        }
+
+        return false;
+    } 
+
 }
