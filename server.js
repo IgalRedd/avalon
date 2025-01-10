@@ -116,10 +116,28 @@ wss.on('connection', (socket, request) => {
                     }
                 });
 
-            case "add_card":
-                break;
-            
-            case "remove_card":
+            case "card_update":
+
+                let cardArgs = data[1].split(',');
+                index = searchArray(cardArgs[2], notStartedGames);
+
+                if (index == -1) {
+                    return;
+                }
+
+                if (cardArgs[1] == "1") {
+                    notStartedGames[index].addCard(cardArgs[0]);
+                }
+
+                if (cardArgs[1] == "-1") {
+                    notStartedGames[index].removeCard(cardArgs[0]);
+                }
+
+                wss.clients.forEach((client) => {
+                    if (client.room == "pregame" && client.lobby == cardArgs[2]) {
+                        client.send("API update_cards:" + cardArgs.join(','));
+                    }
+                });
                 break;
         }
     });
@@ -197,7 +215,7 @@ function isValidUsername(username) {
     }
 
     // Check username for invalid length
-    if (username.length >= 16 || username.length === 0) {
+    if (username.length >= 16 || username.length == 0) {
         return "Error: Username cannot be empty or longer than 16 characters.";
     }
 
@@ -411,9 +429,11 @@ server.listen(PORT, () => {
 runningGames = [];
 notStartedGames = [];
 storedUsernames = [];
-const cardNames = ["Merlin", "Percival", "Assasin", "Oberon", "Mordred", "Morgana", "Loyal Servents of Arthur", "Minions of Mordred"];
+const cardNames = ["Merlin", "Percival", "Assasin", "Oberon", "Mordred", "Morgana", "ServantsofArthur", "MinionsofMordred"];
+const evilCardNames = ["Oberon", "Mordred", "Morgana", "MinionsofMordred"];
+const goodCardNames = ["ServantsofArthur"];
 // First element is EVIL, second is GOOD
-const cardRatios = {5:(2,3), 6:(2,4), 7:(3,4), 8:(3,5), 9:(3,6), 10:(4,6)};
+const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
 
 // Searches given array of games (important) by name
 // Returns index or -1
@@ -468,72 +488,66 @@ class GameAttributes {
         }
     }
 
-    addGoodCard(cardName) {
+    addCard(cardName) {
         if (!cardNames.includes(cardName)) {
             return false;
         }
 
-        if (this._currentCardRatio[1] >= this._goodCards.length) {
-            return false;
+        // Check to see if desired added card is an evil card
+        if (evilCardNames.includes(cardName)) {
+            if (this._currentCardRatio[0] >= this.evilCards.length) {
+                return false;
+            }
+            else {
+                this._evilCards.push(cardName);
+            }
         }
 
-        this._goodCards.push(cardName);
+        // Check to see if desired added card is an good card
+        if (goodCardNames.includes(cardName)) {
+            if (this._currentCardRatio[1] >= this.goodCards.length) {
+                    return false;
+            }
+            else {
+                this._goodCards.push(cardName);
+            }
+        }
+
+        //TO DO: force constraints on limited characters
 
         return true;
     }
 
-    addEvilCard(cardName) {
+    removeCard(cardName) {
+
         if (!cardNames.includes(cardName)) {
             return false;
         }
 
-        if (this._currentCardRatio[0] >= this._evilCards.length) {
-            return false;
+        if (evilCardNames.includes(cardName)) {
+            let index = this._evilCards.indexOf(cardName);
+
+            if (index == -1) {
+                return false;
+            }
+
+            this._evilCards.splice(index, 1);
+
+            return true;
         }
 
-        this._evilCards.push(cardName);
+        if (goodCardNames.includes(cardName)) {
+            let index = this._goodCards.indexOf(cardName);
 
-        return true;
-    }
+            if (index == -1) {
+                return false;
+            }
 
-    removeGoodCard(cardName) {
-        if (!cardNames.includes(cardName)) {
-            return false;
+            this._goodCards.splice(index, 1);
+
+            return true;
         }
 
-        if (cardName == "Merlin" || cardName == "Percival") {
-            return false;
-        }
-
-        let index = this._goodCards.indexOf(cardName);
-
-        if (index == -1) {
-            return false;
-        }
-
-        this._goodCards.splice(index, 1);
-
-        return true;
-    }
-
-    removeEvilCard(cardName) {
-        if (!cardNames.includes(cardName)) {
-            return false;
-        }
-
-        if (cardName == "Assassin") {
-            return false;
-        }
-
-        let index = this._evilCards.indexOf(cardName);
-
-        if (index == -1) {
-            return false;
-        }
-
-        this._evilCards.splice(index, 1);
-
-        return true;
     }
 
     addPlayer(new_name) {

@@ -179,6 +179,11 @@ window.onload = function () {
                 startGame();
             
             case "update_cards":
+                let cardArgs = data[1].split(',');
+                let change = parseInt(cardArgs[1]);
+
+                updateCardCount(cardArgs[0], change);
+                
                 break;
         }
     });
@@ -243,41 +248,63 @@ function startGame() {
     }
 }
 
+let goodCount = 2;
+let evilCount = 1;
+const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
+
 // Function to update card count while considering the max lobby size
 function updateCardCount(cardName, change) {
+    // Merlin, Percival and Assassin are not included as they are mandatory base cards for any given game
+    const goodCards = ["ServantsofArthur"];
+    const badCards = ["Oberon", "Mordred", "Morgana", "MinionsofMordred"];
+
     const maxPlayers = parseInt(document.getElementById('max_players').value);
-    let totalCards = 0;
-    
-    // Calculate the current total of selected cards
-    document.querySelectorAll('.card-count').forEach(countDisplay => {
-        const [current] = countDisplay.innerHTML.split('/').map(Number);
-        totalCards += current;
-    });
-    
-    // Get the current card's count element and its current value
-    let countId = cardName.toLowerCase().replace(/\s+/g, '-') + '-count';
-    let countDisplay = document.getElementById(countId);
-    let [current, max] = countDisplay.innerHTML.split('/').map(Number);
-    
-    // Calculate the new total cards if this change is applied
-    const newTotalCards = totalCards + change;
-    
-    // Check if the new total would exceed the max lobby size
-    if (newTotalCards <= maxPlayers && current + change >= 0 && current + change <= max) {
-        countDisplay.innerHTML = `${current + change}/${max}`;
-    } else {
-        return; // Prevent adding cards if the limit is exceeded
+
+    let countDisplay = document.querySelector(`[data-count=${cardName}]`);
+
+    let currentAmount = parseInt(countDisplay.innerHTML.split("/")[0]);
+    let maxAmount = parseInt(countDisplay.innerHTML.split("/")[1]);
+
+    if (currentAmount == 0 && change == -1) {
+        return;
     }
-    
-    // Recalculate the total card count after the change
-    totalCards = 0; // Reset the total cards
-    document.querySelectorAll('.card-count').forEach(countDisplay => {
-        const [current] = countDisplay.innerHTML.split('/').map(Number);
-        totalCards += current;
-    });
-    
-    // Update the total card count display
-    document.getElementById('total-count-display').innerHTML = totalCards;
+
+    if (currentAmount >= maxAmount && change == 1) {
+        return;
+    }
+
+    if (badCards.includes(cardName)) {
+        // Check card ratios for evil to ensure balanced game
+        if (cardRatios[maxPlayers][0] <= evilCount && change == 1) {
+            return;
+        }
+
+        currentAmount += change;
+        evilCount += change;
+
+        countDisplay.innerHTML = `${currentAmount}/${maxAmount}`;
+    }
+
+    if (goodCards.includes(cardName)) {
+
+        console.log(cardRatios[maxPlayers][1]);
+        console.log(maxPlayers);
+
+        // Check card ratios for good to ensure balanced game
+        if (cardRatios[maxPlayers][1] <= goodCount && change == 1) {
+            return;
+        }
+
+        currentAmount += change;
+        goodCount += change;
+
+        countDisplay.innerHTML = `${currentAmount}/${maxAmount}`;
+    }
+
+    if (document.getElementById("owner").value == document.getElementById("username").value) {
+        socket.send("API card_update:" + [cardName, change, document.getElementById('owner').value].join(","));
+    }
+
 }
 
 // Function to update total card count display

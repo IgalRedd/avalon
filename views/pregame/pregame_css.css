@@ -30,3 +30,61 @@ img {
 .clickable {
     cursor: pointer;
 }
+
+#add-cards-controls {
+    display: flex;
+    justify-content: space-around;
+    width: 60%;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+.column {
+    width: 45%;
+}
+
+.card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.card-green span:first-child {
+    color: green;
+}
+
+.card-red span:first-child {
+    color: red;
+}
+
+.card-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
+
+.card-buttons button {
+    margin: 0 5px;
+}
+
+.card-count {
+    flex: 1;
+    text-align: right;
+    color: black;
+}
+
+.column-header {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.card span:first-child {
+    flex: 1;
+    text-align: left;
+}
