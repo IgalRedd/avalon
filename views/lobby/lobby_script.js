@@ -21,6 +21,10 @@ socket.addEventListener('message', (message) => {
         return;
     }
 
+    // Variables used in a lot of the switches
+    let names = document.getElementById('games').querySelectorAll('p');
+    let args = [];
+
     switch(params[1]) {
         case "new_game": 
             // Create the p tag with the data
@@ -44,8 +48,6 @@ socket.addEventListener('message', (message) => {
             break;
 
         case "remove_game":
-            let names = document.getElementById('games').querySelectorAll('p');
-
             // Find the game to remove
             for (let i = 0; i < names.length; i++) {
                 let name = names[i].innerHTML;
@@ -57,16 +59,30 @@ socket.addEventListener('message', (message) => {
             break;
         
         case "update_player_numbers":
-            let names2 = document.getElementById('games').querySelectorAll('p');
-            let args = data[1].split(','); // Passed in data is array
+            args = data[1].split(',');
 
             // Find the game to remove
-            for (let i = 0; i < names2.length; i++) {
+            for (let i = 0; i < names.length; i++) {
                 // Find the game with the matching name
-                let name = names2[i].innerHTML;
+                let name = names[i].innerHTML;
                 if (name.split(' : ')[0].trim() === args[0].trim()) {
                     // Change the tag's data to the new values (name won't change but player counts will)
-                    names2[i].innerHTML = `${args[0]} : ${args[1]} / ${args[2]}`;
+                    names[i].innerHTML = `${args[0]} : ${args[1]} / ${args[2]}`;
+                    return;
+                }
+            }
+            break;
+
+        case "new_owner":
+            args = data[1].split(',');
+
+            for (let i = 0; i < names.length; i++) {
+                let name = names[i].innerHTML;
+                // Check if it matches old owner
+                if (name.split(' : ')[0].trim() === args[1].trim()) {
+                    let playerCount = name.split(' : ')[1].split(' / ');
+                    // Set new owner + decrement the player count by 1
+                    names[i].innerHTML = `${args[0]} : ${parseInt(playerCount[0]) - 1} / ${playerCount[1]}`;
                     return;
                 }
             }

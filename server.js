@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
+const { notDeepEqual } = require('assert');
 
 const PORT = 8000;
 
@@ -35,6 +36,7 @@ wss.on('connection', (socket, request) => {
             socket.room = "pregame";
             socket.lobby = url.searchParams.get('lobby');
             socket.user = url.searchParams.get('username');
+            socket.starting = false;
             break;
     }
 
@@ -46,11 +48,12 @@ wss.on('connection', (socket, request) => {
             return;
         }
 
+        let index = -1;
         switch(params[1]) {
             case "update_player_numbers":
                 // Get the game index
                 let args = data[1].split(',');
-                let index = searchArray(args[0], notStartedGames);
+                index = searchArray(args[0], notStartedGames);
 
                 if (index == -1) {
                     return;
@@ -71,9 +74,51 @@ wss.on('connection', (socket, request) => {
                     }
                 });
                 break;
+           
+            case "kick_player":
+                // TODO: make this more intuitive, like displaying the fact that they got kicked
+                wss.clients.forEach((client) => {
+                    if (client.room == "pregame" && client.user == data[1]) {
+                        client.send("API leave;");
+                        return;
+                    }
+                });
+                break;
+
+            case "start_game":
+                index = searchArray(data[1], notStartedGames);
+
+                if (index == -1) {
+                    return;
+                }
+
+                let startingGame = notStartedGames[index];
+                if (startingGame.cur_players != startingGame.max_players) {
+                    return;
+                }
+
+                // By this point we have a valid game that is full
+                // TODO: check cards as well
+
+                // Set the socket to be started
+                socket.starting = true;
+                // Update arrays
+                runningGames.push(startingGame);
+                notStartedGames.splice(index, 1);
+
+                // Update the other players
+                wss.clients.forEach((client) => {
+                    if (client.room == "pregame" && client.lobby == data[1]) {
+                        client.starting = true;
+                        client.send("API start_game;");
+                    } else if (client.room = "lobby") {
+                        client.send("API remove_game;" + data[1]);
+                    }
+                });
 
             case "add_card":
                 break;
+            
             case "remove_card":
                 break;
         }
@@ -82,8 +127,12 @@ wss.on('connection', (socket, request) => {
     socket.on('close', () => {
         // TODO: kick sockets out of arrays
         if (socket.room == "pregame") {
+            // If they're closing the socket because of the game starting don't do anything
+            if (socket.starting) {
+                return;
+            }
+
             let index = searchArray(socket.lobby, notStartedGames);
-            
             // Game doesn't exist so stop
             if (index == -1) {
                 return;
@@ -92,21 +141,22 @@ wss.on('connection', (socket, request) => {
             let userIndex = storedUsernames.indexOf(socket.user);
             storedUsernames.splice(userIndex, 1);
 
-            //TO DO: Ensure that if host leaves, game does not crash (for now host is permantly stuck in lobby)
-
             let game = notStartedGames[index];
             // If this is true we need to delete the game
             if (game.cur_players == 1) {
+                notStartedGames.splice(index, 1);
+
                 wss.clients.forEach((client) => {
                     if (client.room == 'lobby') {
                         client.send("API remove_game;" + game.name);
                     }
                 });
 
-                notStartedGames.splice(index, 1);
+                
                 return;
             }
-
+            
+            // Remove player
             if (game.removePlayer(socket.user)) {
                 // Update the clients in the pregame lobby to update player list
                 wss.clients.forEach((client) => {
@@ -115,6 +165,20 @@ wss.on('connection', (socket, request) => {
                     } else if (client.room == 'lobby') {
                         // Update the lobby players with the correct count of players in the pregame
                         client.send("API update_player_numbers;" + [game.name, game.cur_players, game.max_players].join(','))
+                    }
+                });
+            } else if (game.name == socket.user) {
+                // Remove owner ; this'll only be called if number of players > 1 as that check is above
+                let old_owner = game._name;
+                game.newOwner();
+                wss.clients.forEach((client) => {
+                    // Update the new owner in the pregame and in lobby
+                    if (client.room == 'pregame' && client.lobby == old_owner) {
+                        // Set the new owner
+                        client.lobby = game.name;
+                        client.send("API new_owner;" + [game.name, old_owner].join(','));
+                    } else if (client.room == 'lobby') {
+                        client.send("API new_owner;" + [game.name, old_owner].join(','));
                     }
                 });
             }
@@ -175,6 +239,7 @@ function pregameEJS(res, args) {
     return res.render('pregame/pregame', {game: game, myUsername: args[0]})
 }
 
+// Args should be [<username of joiner>, <username of host>]
 function joinGameEJS(res, args) {
     let username = args[0].trim(); // Trim the username
     let errorMessage = isValidUsername(args[0]);
@@ -208,12 +273,23 @@ function joinGameEJS(res, args) {
 
 }
 
+// Args should be [<host username>, <username of player>]
+function gameEJS(res, args) {
+    
+
+    res.render('game/game', {});
+}
+
+// Args should be [<host username>]
+function joinActiveGameEJS(res, args) {
+    res.render('game/game', []);
+}
+
 
 // Function to just handle routing of EJS files
 // Expects files in the form of: <name>.ejs
 // Takes in an array of args to pass onto the EJS resolver
 function resolveEJS(pathName, res, args) {
-    // TODO: update this to work with subdirectories?
     switch (pathName) {
         case "views/lobby/lobby.ejs":
             lobbyEJS(res);
@@ -225,6 +301,10 @@ function resolveEJS(pathName, res, args) {
 
         case "views/pregame/joingame.ejs":
             joinGameEJS(res, args);
+            return false;
+
+        case "views/game/game.ejs":
+            gameEJS(res, args);
             return false;
         
         default:
@@ -305,6 +385,13 @@ app.post('/*', (req, res) => {
                 return res.send("Attempting to access unknown files");
             }   
             break; 
+        
+        case '/game/game':
+            if (resolveEJS('views/game/game.ejs', res, [req.body.owner])) {
+                res.status(404);
+                return res.send("Attempting to access unknown files");
+            }
+            break;
 
         default:
             res.status(404);
@@ -461,6 +548,7 @@ class GameAttributes {
     }
 
     removePlayer(to_remove) {
+        // Check if this is a player in the players list
         if (this.current_players.includes(to_remove)) {
             // Removes the player
             let index = this.current_players.indexOf(to_remove);
@@ -472,6 +560,17 @@ class GameAttributes {
         }
 
         return false;
-    } 
+    }
+
+    // Changes the owner of the game and updates the information
+    // This is effectively removePlayer for the owner
+    // Note: cur_players must be > 1. This is taken for granted
+    newOwner() {
+        // Set new owner
+        this._name = this.current_players[0];
+        // Remove chosen new owner from play
+        this.current_players.splice(0, 1);
+        this._cur_players -= 1;
+    }
 
 }
