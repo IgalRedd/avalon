@@ -153,11 +153,15 @@ window.onload = function () {
 
             case "start_game":
                 startGame();
+            
+            case "update_cards":
                 break;
         }
     });
-};
 
+    // Initialize total card count
+    updateTotalCardCount();
+};
 
 // Changes the max size of allowed players and notifies the server too
 function changeMaxsize(new_max_size) {
@@ -170,11 +174,16 @@ function changeMaxsize(new_max_size) {
         return;
     }
 
-    // Update our statistics
+    // Update the hidden input with the new max size
     document.getElementById('max_players').value = new_max_size;
 
+    // Update the displayed max lobby size in the UI
+    document.getElementById('max-lobby-size').innerHTML = new_max_size;
+
+    // Notify the server about the new max size
     socket.send("API update_player_numbers;" + [game_owner, new_max_size].join(','));
 }
+
 
 function kickPlayer(name) {
     socket.send("API kick_player;" + name);
@@ -208,4 +217,52 @@ function startGame() {
 
         document.getElementById('startGame').submit();
     }
+
+// Function to update card count while considering the max lobby size
+function updateCardCount(cardName, change) {
+    const maxPlayers = parseInt(document.getElementById('max_players').value);
+    let totalCards = 0;
+    
+    // Calculate the current total of selected cards
+    document.querySelectorAll('.card-count').forEach(countDisplay => {
+        const [current] = countDisplay.innerHTML.split('/').map(Number);
+        totalCards += current;
+    });
+    
+    // Get the current card's count element and its current value
+    let countId = cardName.toLowerCase().replace(/\s+/g, '-') + '-count';
+    let countDisplay = document.getElementById(countId);
+    let [current, max] = countDisplay.innerHTML.split('/').map(Number);
+    
+    // Calculate the new total cards if this change is applied
+    const newTotalCards = totalCards + change;
+    
+    // Check if the new total would exceed the max lobby size
+    if (newTotalCards <= maxPlayers && current + change >= 0 && current + change <= max) {
+        countDisplay.innerHTML = `${current + change}/${max}`;
+    } else {
+        return; // Prevent adding cards if the limit is exceeded
+    }
+    
+    // Recalculate the total card count after the change
+    totalCards = 0; // Reset the total cards
+    document.querySelectorAll('.card-count').forEach(countDisplay => {
+        const [current] = countDisplay.innerHTML.split('/').map(Number);
+        totalCards += current;
+    });
+    
+    // Update the total card count display
+    document.getElementById('total-count-display').innerHTML = totalCards;
+}
+
+// Function to update total card count display
+function updateTotalCardCount() {
+    let totalCards = 0;
+    document.querySelectorAll('.card-count').forEach(countDisplay => {
+        const [current] = countDisplay.innerHTML.split('/').map(Number);
+        totalCards += current;
+    });
+    
+    // Update the total card count in the display
+    document.getElementById('total-count-display').innerHTML = totalCards;
 }

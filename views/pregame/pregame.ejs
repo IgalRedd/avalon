@@ -4,6 +4,56 @@
     <head>
         <link rel="stylesheet" href="/pregame/pregame_css.css">
         <script src="/pregame/pregame_script.js"></script>
+        <style>
+            #add-cards-controls {
+                display: flex;
+                justify-content: space-around;
+                width: 60%;
+                margin: auto;
+                padding: 20px;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                background-color: #f9f9f9;
+            }
+            .column {
+                width: 45%;
+            }
+            .card {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .card-green span:first-child {
+                color: green;
+            }
+            .card-red span:first-child {
+                color: red;
+            }
+            .card-buttons {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex: 1;
+            }
+            .card-buttons button {
+                margin: 0 5px;
+            }
+            .card-count {
+                flex: 1;
+                text-align: right;
+                color: black;
+            }
+            .column-header {
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+            .card span:first-child {
+                flex: 1;
+                text-align: left;
+            }
+        </style>
     </head>
 
     <body id="body">
@@ -58,6 +108,80 @@
         <form id="leaveGame" action="/" method="GET">
             <button onclick="leave()">Leave</button>
         </form>
-    </body> 
-    
+        
+        <div id="add-cards-controls">
+            <div class="column">
+                <div class="column-header">Good</div>
+                <div class="card card-green">
+                    <span>Merlin</span>
+                    <span id="merlin-count" class="card-count">1/1</span>
+                </div>
+                <div class="card card-green">
+                    <span>Percival</span>
+                    <span id="percival-count" class="card-count">1/1</span>
+                </div>
+                <div class="card card-green">
+                    <span>Servants of Arthur</span>
+                    <% if (game._name == myUsername) { %>
+                    <div class="card-buttons">
+                        <button type="button" onclick="updateCardCount('Servants of Arthur', 1)">+</button>
+                        <button type="button" onclick="updateCardCount('Servants of Arthur', -1)">-</button>
+                    </div>
+                    <% } %>
+                    <span id="servants-of-arthur-count" class="card-count">0/5</span>
+                </div>
+            </div>
+            <div class="column">
+                <div class="column-header">Evil</div>
+                <div class="card card-red">
+                    <span>Assassin</span>
+                    <span id="assassin-count" class="card-count">1/1</span>
+                </div>
+                <div class="card card-red">
+                    <span>Morgana</span>
+                    <% if (game._name == myUsername) { %>
+                    <div class="card-buttons">
+                        <button type="button" onclick="updateCardCount('Morgana', 1)">+</button>
+                        <button type="button" onclick="updateCardCount('Morgana', -1)">-</button>
+                    </div>
+                    <% } %>
+                    <span id="morgana-count" class="card-count">0/1</span>
+                </div>
+                <div class="card card-red">
+                    <span>Oberon</span>
+                    <% if (game._name == myUsername) { %> 
+                    <div class="card-buttons">
+                        <button type="button" onclick="updateCardCount('Oberon', 1)">+</button>
+                        <button type="button" onclick="updateCardCount('Oberon', -1)">-</button>
+                    </div>
+                    <% } %>
+                    <span id="oberon-count" class="card-count">0/1</span>
+                </div>
+                <div class="card card-red">
+                    <span>Mordred</span>
+                    <% if (game._name == myUsername) { %> 
+                    <div class="card-buttons">
+                        <button type="button" onclick="updateCardCount('Mordred', 1)">+</button>
+                        <button type="button" onclick="updateCardCount('Mordred', -1)">-</button>
+                    </div>
+                    <% } %>
+                    <span id="mordred-count" class="card-count">0/1</span>
+                </div>
+                <div class="card card-red">
+                    <span>Minions of Mordred</span>
+                    <% if (game._name == myUsername) { %> 
+                    <div class="card-buttons">
+                        <button type="button" onclick="updateCardCount('Minions of Mordred', 1)">+</button>
+                        <button type="button" onclick="updateCardCount('Minions of Mordred', -1)">-</button>
+                    </div>
+                    <% } %>
+                    <span id="minions-of-mordred-count" class="card-count">0/3</span>
+                </div>
+            </div>
+        </div> 
+        
+        <div id="total-card-count" style="text-align: center; margin-top: 10px;">
+            <strong>Total Cards: <span id="total-count-display">0</span> / <span id="max-lobby-size"><%= game._max_players %></span></strong>
+        </div>
+   </body> 
 </html>

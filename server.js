@@ -74,7 +74,7 @@ wss.on('connection', (socket, request) => {
                     }
                 });
                 break;
-            
+           
             case "kick_player":
                 // TODO: make this more intuitive, like displaying the fact that they got kicked
                 wss.clients.forEach((client) => {
@@ -115,6 +115,11 @@ wss.on('connection', (socket, request) => {
                         client.send("API remove_game;" + data[1]);
                     }
                 });
+
+            case "add_card":
+                break;
+            
+            case "remove_card":
                 break;
         }
     });
@@ -406,6 +411,9 @@ server.listen(PORT, () => {
 runningGames = [];
 notStartedGames = [];
 storedUsernames = [];
+const cardNames = ["Merlin", "Percival", "Assasin", "Oberon", "Mordred", "Morgana", "Loyal Servents of Arthur", "Minions of Mordred"];
+// First element is EVIL, second is GOOD
+const cardRatios = {5:(2,3), 6:(2,4), 7:(3,4), 8:(3,5), 9:(3,6), 10:(4,6)};
 
 // Searches given array of games (important) by name
 // Returns index or -1
@@ -426,6 +434,15 @@ class GameAttributes {
         this._max_players = 5;
 
         this.current_players = [];
+
+        this._currentCardRatio = cardRatios[this._max_players];
+
+        this._goodCards = ["Merlin", "Percival"];
+        this._evilCards = ["Assassin"];
+    }
+
+    get currentCardRatio() {
+        return this._currentCardRatio;
     }
 
     get name() {
@@ -447,7 +464,76 @@ class GameAttributes {
     set max_players(new_max) {
         if (new_max >= 5 && new_max <= 10) {
             this._max_players = new_max;
+            this._currentCardRatio = cardRatios[this._max_players];
         }
+    }
+
+    addGoodCard(cardName) {
+        if (!cardNames.includes(cardName)) {
+            return false;
+        }
+
+        if (this._currentCardRatio[1] >= this._goodCards.length) {
+            return false;
+        }
+
+        this._goodCards.push(cardName);
+
+        return true;
+    }
+
+    addEvilCard(cardName) {
+        if (!cardNames.includes(cardName)) {
+            return false;
+        }
+
+        if (this._currentCardRatio[0] >= this._evilCards.length) {
+            return false;
+        }
+
+        this._evilCards.push(cardName);
+
+        return true;
+    }
+
+    removeGoodCard(cardName) {
+        if (!cardNames.includes(cardName)) {
+            return false;
+        }
+
+        if (cardName == "Merlin" || cardName == "Percival") {
+            return false;
+        }
+
+        let index = this._goodCards.indexOf(cardName);
+
+        if (index == -1) {
+            return false;
+        }
+
+        this._goodCards.splice(index, 1);
+
+        return true;
+    }
+
+    removeEvilCard(cardName) {
+        if (!cardNames.includes(cardName)) {
+            return false;
+        }
+
+        if (cardName == "Assassin") {
+            return false;
+        }
+
+        let index = this._evilCards.indexOf(cardName);
+
+        if (index == -1) {
+            return false;
+        }
+
+        this._evilCards.splice(index, 1);
+
+        return true;
     }
 
     addPlayer(new_name) {
