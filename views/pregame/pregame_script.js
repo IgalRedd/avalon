@@ -88,6 +88,30 @@ window.onload = function () {
 
                 
                 if (document.getElementById('username').value == new_owner) {
+
+                    // Add buttons for card changing when owner leaves and new owner is assigned
+                    let buttonable = document.querySelectorAll(".buttonable");
+
+                    for (let i = 0; i < buttonable.length; i++) {
+                        let cardDiv = document.createElement("div");
+                        cardDiv.classList.add("card-buttons");
+
+                        let plusButton = document.createElement("button");
+                        plusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, 1)};
+                        plusButton.setAttribute("type", "button");
+                        plusButton.textContent = "+";
+
+                        let minusButton = document.createElement("button");
+                        minusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, -1)};
+                        minusButton.setAttribute("type", "button");
+                        minusButton.textContent = "-";
+
+                        cardDiv.appendChild(plusButton);
+                        cardDiv.appendChild(minusButton);
+                        buttonable[i].after(cardDiv);
+                    }
+
+
                     // If you are the new owner display the radio buttons for selecting new max size
                     let btn_div = document.createElement('div');
                     btn_div.setAttribute('id', 'lobby-size-controls');
