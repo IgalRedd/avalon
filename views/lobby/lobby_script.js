@@ -96,15 +96,15 @@ function isValidUsername(username) {
 
     // Check username for invalid characters
     if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
-        return false;
+        return "Error: '<', '>', ':' and ';' symbols are not accepted.";
     }
 
     // Check username for invalid length
-    if (username.length >= 16 || username.length === 0) {
-        return false;
+    if (username.length >= 16 || username.length == 0) {
+        return "Error: Username cannot be empty or longer than 16 characters.";
     }
 
-    return true;
+    return "";
 }
 
 
@@ -112,19 +112,11 @@ function newGame() {
     let username = document.getElementById('username').value;
     const errorMessageElement = document.getElementById('error-message');
 
-    // Clear any previous error messages
-    errorMessageElement.innerHTML = '';
-
-    // Use the validation function
-    if (!isValidUsername(username)) {
-        if (username.trim().length != 0) {
-            errorMessageElement.innerHTML = "Error: '<', '>', ':', and ';' symbols are not accepted.";
-            return
-        }
-        else {
-        errorMessageElement.innerHTML = "Error: Username cannot be empty or longer than 16 characters.";
+    // Ensure username is valid
+    let err = isValidUsername(username);
+    if (err != '') {
+        errorMessageElement.innerHTML = err;
         return;
-        }
     }
 
     document.getElementById('newGameForm').submit();
@@ -135,18 +127,11 @@ function joinGame(game_name) {
     let own_username = document.getElementById('username').value;
     const errorMessageElement = document.getElementById('error-message');
 
-    // Clear any previous error messages
-    errorMessageElement.innerHTML = '';
-
-    if (!isValidUsername(own_username)) {
-        if (own_username.trim().length != 0) {
-            errorMessageElement.innerHTML = "Error: '<', '>', ':', and ';' symbols are not accepted.";
-            return
-        }
-        else {
-        errorMessageElement.innerHTML = "Error: Username cannot be empty or longer than 16 characters.";
+    // Ensure username is valid
+    let err = isValidUsername(own_username);
+    if (err != '') {
+        errorMessageElement.innerHTML = err;
         return;
-        }
     }
     
     // Fill out hidden form values
