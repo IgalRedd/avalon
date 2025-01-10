@@ -217,6 +217,7 @@ function startGame() {
 
         document.getElementById('startGame').submit();
     }
+}
 
 // Function to update card count while considering the max lobby size
 function updateCardCount(cardName, change) {
