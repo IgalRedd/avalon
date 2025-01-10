@@ -1,0 +1,32 @@
+p {
+    margin: 0;
+}
+
+html {
+    width: 90vw;
+}
+
+#player-div {
+    width: 40%;
+}
+
+.individual-player {
+    display: flex;
+    width: fit-content;
+    height: fit-content;
+    align-items: center;
+}
+
+img {
+    width: 32px;
+    height: 32px;
+}
+
+.player-display {
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+}
+
+.clickable {
+    cursor: pointer;
+}
