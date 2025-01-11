@@ -1,5 +1,26 @@
+html, body {
+    height: 95%;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 #game-space {
     position: relative;
-    width: 70vw;
-    height: 70vh;
+    width: 75vh;
+    height: 75vh;
+
+    border: 2px solid black;
+    border-radius: 50%;
+}
+
+#game-space p {
+    position: absolute;
+
+    border: 6px solid #AA845A;
+    background-color: #AA845A;
+    border-radius: 40%;
+    padding: 3px;
 }

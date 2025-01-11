@@ -11,6 +11,7 @@
         <p><%= myUsername %>, you are: <%= Object.keys(game._characterSelected).find(k => game._characterSelected[k] == myUsername) %></p>
         <div id="game-space">
             <p><%= game._name %></p>
+            
             <% for (let i = 0; i < game._cur_players - 1; i++) { %>
                 <p><%= game.current_players[i] %></p>
             <% } %>
