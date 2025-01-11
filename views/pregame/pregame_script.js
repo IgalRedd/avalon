@@ -7,6 +7,9 @@ let socket = null;
 let goodCount = 2;
 let evilCount = 1;
 const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
+// Merlin, Percival and Assassin are not included as they are mandatory base cards for any given game
+const goodCards = ["ServantsofArthur"];
+const evilCards = ["Oberon", "Mordred", "Morgana", "MinionsofMordred"];
 
 function removePlayer(to_remove) {
     let names_array = document.getElementById('player-div').querySelectorAll('p');
@@ -206,6 +209,20 @@ window.onload = function () {
         }
     });
 
+    // We need to set up the evil and good counts from scratch because newly joined players won't display properly
+    let displays = document.querySelectorAll('[data-count]');
+    for (let i = 0; i < displays.length; i++) {
+        let count = parseInt(displays[i].innerHTML.split('/')[0]);
+        let cardName = displays[i].getAttribute("data-count");
+
+        // Increment counters
+        if (goodCards.includes(cardName)) {
+            goodCount += count;
+        } else if (evilCards.includes(cardName)) {
+            evilCount += count;
+        }
+    }
+
     updateCards();
 };
 
@@ -270,10 +287,6 @@ function startGame() {
 
 // Function to update card count while considering the max lobby size
 function updateCardCount(cardName, change) {
-    // Merlin, Percival and Assassin are not included as they are mandatory base cards for any given game
-    const goodCards = ["ServantsofArthur"];
-    const badCards = ["Oberon", "Mordred", "Morgana", "MinionsofMordred"];
-
     const maxPlayers = parseInt(document.getElementById('max_players').value);
 
     let countDisplay = document.querySelector(`[data-count=${cardName}]`);
@@ -288,7 +301,7 @@ function updateCardCount(cardName, change) {
     }
 
     // Bad cards case
-    if (badCards.includes(cardName)) {
+    if (evilCards.includes(cardName)) {
         // Check card ratios for evil to ensure balanced game
         if (cardRatios[maxPlayers][0] <= evilCount && change == 1) {
             return;
