@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { URL } = require('url');
-const { notDeepEqual } = require('assert');
 
 const PORT = 8000;
 
@@ -93,7 +92,7 @@ wss.on('connection', (socket, request) => {
                 }
 
                 let startingGame = notStartedGames[index];
-                if (startingGame.cur_players != startingGame.max_players) {
+                if (!startingGame.startGame()) {
                     return;
                 }
 
@@ -292,16 +291,20 @@ function joinGameEJS(res, args) {
 
 }
 
-// Args should be [<host username>, <username of player>]
+// Args should be [<your username>, <host username>]
 function gameEJS(res, args) {
-    
+    // TODO: make the connection and this work together, so far we're under the assumption when this is called the game successfully started
 
-    res.render('game/game', {});
-}
+    let index = searchArray(args[1], runningGames);
 
-// Args should be [<host username>]
-function joinActiveGameEJS(res, args) {
-    res.render('game/game', []);
+    // This is with the TODO and ensure the game is running when this is called
+    if (index == -1) {
+        res.status(404);
+        return res.send("Attempting to access unknown files");
+    }
+
+    let game = runningGames[index];
+    res.render('game/game', {game: game, myUsername: args[0]});
 }
 
 
@@ -406,7 +409,7 @@ app.post('/*', (req, res) => {
             break; 
         
         case '/game/game':
-            if (resolveEJS('views/game/game.ejs', res, [req.body.owner])) {
+            if (resolveEJS('views/game/game.ejs', res, [req.body.username])) {
                 res.status(404);
                 return res.send("Attempting to access unknown files");
             }
@@ -460,6 +463,10 @@ class GameAttributes {
 
         this._goodCards = ["Merlin", "Percival"];
         this._evilCards = ["Assassin"];
+
+        // Empty until game starts
+        // This'll match cards to names of players
+        this._characterSelected = {};
     }
 
     get currentCardRatio() {
@@ -480,6 +487,10 @@ class GameAttributes {
 
     get otherPlayers() {
         return this.current_players;
+    }
+
+    get evilCards() {
+        return this._evilCards;
     }
 
     set max_players(new_max) {
