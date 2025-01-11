@@ -24,9 +24,21 @@ html, body {
     border-radius: 40%;
     padding: 3px;
 }
+
 .good {
     color: green;
 }
+
 .evil {
     color: red;
+}
+
+.evil-card {
+    border: 6px solid #ad0505 !important;
+    background-color: #ad0505 !important;
+}
+
+.good-card {
+    border: 6px solid #1c8c21 !important;
+    background-color: #1c8c21 !important;
 }
