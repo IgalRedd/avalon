@@ -4,6 +4,10 @@ const port = window.location.port ? `:${window.location.port}` : '';
 
 let socket = null;
 
+let goodCount = 2;
+let evilCount = 1;
+const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
+
 function removePlayer(to_remove) {
     let names_array = document.getElementById('player-div').querySelectorAll('p');
 
@@ -145,6 +149,8 @@ window.onload = function () {
             case "update_player_count":
                 let values = data[1].split(',');
                 document.getElementById('counter-display').innerHTML = `${values[0]} / ${values[1]}`;
+                document.getElementById("max_players").value = values[1];
+                updateCards();
                 break;
 
             case "new_owner":
@@ -200,8 +206,7 @@ window.onload = function () {
         }
     });
 
-    // Initialize total card count
-    updateTotalCardCount();
+    updateCards();
 };
 
 
@@ -219,8 +224,7 @@ function changeMaxsize(new_max_size) {
     // Update the hidden input with the new max size
     document.getElementById('max_players').value = new_max_size;
 
-    // Update the displayed max lobby size in the UI
-    document.getElementById('max-lobby-size').innerHTML = new_max_size;
+    updateCards();
 
     // Notify the server about the new max size
     socket.send("API update_player_numbers;" + [game_owner, new_max_size].join(','));
@@ -247,7 +251,9 @@ function startGame() {
     let myUsername = document.getElementById('username').value;
     let hostUsername = document.getElementById('owner').value;
 
-    if (parseInt(document.getElementById('max_players').value) == num_players) {
+    let maxSize = parseInt(document.getElementById('max_players').value);
+
+    if (maxSize == num_players && (goodCount + evilCount) == maxSize) {
         // Set the values for the form
         document.getElementById('lobbyHost').value = hostUsername;
         document.getElementById('myUsername').value = myUsername;
@@ -261,11 +267,6 @@ function startGame() {
         document.getElementById('startGame').submit();
     }
 }
-
-
-let goodCount = 2;
-let evilCount = 1;
-const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
 
 // Function to update card count while considering the max lobby size
 function updateCardCount(cardName, change) {
@@ -300,7 +301,6 @@ function updateCardCount(cardName, change) {
     }
 
     // Good cards case
-    console.log("asdasd");
     if (goodCards.includes(cardName)) {
         // Check card ratios for good to ensure balanced game
         if (cardRatios[maxPlayers][1] <= goodCount && change == 1) {
@@ -313,6 +313,8 @@ function updateCardCount(cardName, change) {
         countDisplay.innerHTML = `${currentAmount}/${maxAmount}`;
     }
 
+    updateCards();
+
     if (document.getElementById("owner").value == document.getElementById("username").value) {
         socket.send("API card_update;" + [cardName, change, document.getElementById('owner').value].join(","));
     }
@@ -320,13 +322,10 @@ function updateCardCount(cardName, change) {
 }
 
 // Function to update total card count display
-function updateTotalCardCount() {
-    let totalCards = 0;
-    document.querySelectorAll('.card-count').forEach(countDisplay => {
-        const [current] = countDisplay.innerHTML.split('/').map(Number);
-        totalCards += current;
-    });
-    
-    // Update the total card count in the display
-    document.getElementById('total-count-display').innerHTML = totalCards;
+function updateCards() {
+    const maxSize = parseInt(document.getElementById('max_players').value); 
+
+    document.getElementById("good-count").innerHTML = `Good Count: ${goodCount} / ${cardRatios[maxSize][1]}`;
+    document.getElementById("evil-count").innerHTML = `Evil Count: ${evilCount} / ${cardRatios[maxSize][0]}`;
+
 }
