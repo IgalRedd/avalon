@@ -3,12 +3,23 @@
     <head>
         <link rel="stylesheet" href="/game/game_css.css">
         <script src="/game/game_script.js"></script>
-
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </head>
 
     <body>
-        <p><%= myUsername %>, you are: <%= Object.keys(game._characterSelected).find(k => game._characterSelected[k] == myUsername) %></p>
+        <p><%= myUsername %>, You are: 
+            <span class="<%= game._characterSelected[myUsername].className %>">
+                <% 
+                    let card = game._characterSelected[myUsername].card;
+                    if (card === "ServantsofArthur") {
+                        card = "Servant of Arthur";
+                    } else if (card === "MinionsofMordred") {
+                        card = "Minion of Mordred";
+                    }
+                %>
+                <%= card %>
+            </span>
+        </p>
         <div id="game-space">
             <p><%= game._name %></p>
             <% for (let i = 0; i < game._cur_players - 1; i++) { %>

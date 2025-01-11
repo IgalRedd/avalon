@@ -3,3 +3,9 @@
     width: 70vw;
     height: 70vh;
 }
+.good {
+    color: green;
+}
+.evil {
+    color: red;
+}
