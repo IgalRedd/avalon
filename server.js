@@ -435,7 +435,7 @@ notStartedGames = [];
 storedUsernames = [];
 const cardNames = ["Merlin", "Percival", "Assasin", "Oberon", "Mordred", "Morgana", "ServantsofArthur", "MinionsofMordred"];
 const evilCardNames = ["Oberon", "Mordred", "Morgana", "MinionsofMordred"];
-const goodCardNames = ["ServantsofArthur"];
+const goodCardNames = ["Merlin", "Percival","ServantsofArthur"];
 // First element is EVIL, second is GOOD
 const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
 
@@ -518,7 +518,12 @@ class GameAttributes {
             let randCard = Math.floor(Math.random() * card_list.length);
 
             // Assign it
-            this._characterSelected[card_list[randCard]] = player_list[randPlayer];
+            let player = player_list[randPlayer];
+            let card = card_list[randCard];
+            this._characterSelected[player] = {
+                card: card,
+                className: goodCardNames.includes(card) ? 'good' : 'evil' // Assign class based on card type
+            };
 
             // Decrement the list as we've assigned that player
             player_list.splice(randPlayer, 1);

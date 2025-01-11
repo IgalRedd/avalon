@@ -24,3 +24,9 @@ html, body {
     border-radius: 40%;
     padding: 3px;
 }
+.good {
+    color: green;
+}
+.evil {
+    color: red;
+}
