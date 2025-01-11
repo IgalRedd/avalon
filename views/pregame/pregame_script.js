@@ -18,6 +18,77 @@ function removePlayer(to_remove) {
     document.getElementById('counter-display').innerHTML = `${parseInt(counterText[0]) - 1} / ${counterText[1]}`;
 }
 
+// Moved to this function for easier reading of event handler
+// Adds the radio buttons to change size and the start button
+function addButtons() {
+    let btn_div = document.createElement('div');
+    btn_div.setAttribute('id', 'lobby-size-controls');
+
+    let btn_pTag = document.createElement("p");
+    btn_pTag.innerHTML = "Select Lobby Size:";
+    btn_div.appendChild(btn_pTag);
+
+    let second_btn_div = document.createElement('div');
+    btn_div.appendChild(second_btn_div);
+
+    for (let i = 5; i < 11; i++) {
+        let label = document.createElement('label');
+
+        // Create the radio input element
+        let input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'lobbySize';
+        input.value = i;
+        input.setAttribute('onchange', `changeMaxsize(${i})`);
+
+        // Only for first one
+        if (i == 5) {
+            input.checked = true;
+        }
+        
+        // Append the input to the label
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(`${i} Players`));
+
+        second_btn_div.appendChild(label);
+        second_btn_div.appendChild(document.createElement("br"));
+    }
+
+    // Display the start game button
+    let start_btn = document.createElement("button");
+    start_btn.textContent = "Start Game"
+    start_btn.onclick = () => {startGame()};
+    btn_div.appendChild(start_btn);
+
+    // Finally add it to the body
+    document.getElementById('body').appendChild(btn_div);
+}
+
+// Moved to this function for easier reading of event handler
+// Adds the buttons for the cards and makes them functional
+function addCardUI() {
+    let buttonable = document.querySelectorAll(".buttonable");
+
+    for (let i = 0; i < buttonable.length; i++) {
+        let cardDiv = document.createElement("div");
+        cardDiv.classList.add("card-buttons");
+
+        let plusButton = document.createElement("button");
+        plusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, 1)};
+        plusButton.setAttribute("type", "button");
+        plusButton.textContent = "+";
+
+        let minusButton = document.createElement("button");
+        minusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, -1)};
+        minusButton.setAttribute("type", "button");
+        minusButton.textContent = "-";
+
+        cardDiv.appendChild(plusButton);
+        cardDiv.appendChild(minusButton);
+        buttonable[i].after(cardDiv);
+    }
+}
+
 window.onload = function () {
     let owner = document.getElementById('owner').value;
     let username = document.getElementById('username').value;
@@ -86,77 +157,14 @@ window.onload = function () {
                 document.getElementById('banner').innerHTML = `${new_owner}'s Game`;
                 document.getElementById('owner').value = new_owner;
 
-                
+                // Some updates only the owner needs to see
                 if (document.getElementById('username').value == new_owner) {
+                    // To display buttons for the card UI
+                    addCardUI();
 
-                    // Add buttons for card changing when owner leaves and new owner is assigned
-                    let buttonable = document.querySelectorAll(".buttonable");
+                    // To display the buttons an owner should see
+                    addButtons();
 
-                    for (let i = 0; i < buttonable.length; i++) {
-                        let cardDiv = document.createElement("div");
-                        cardDiv.classList.add("card-buttons");
-
-                        let plusButton = document.createElement("button");
-                        plusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, 1)};
-                        plusButton.setAttribute("type", "button");
-                        plusButton.textContent = "+";
-
-                        let minusButton = document.createElement("button");
-                        minusButton.onclick = () => {updateCardCount(buttonable[i].innerHTML, -1)};
-                        minusButton.setAttribute("type", "button");
-                        minusButton.textContent = "-";
-
-                        cardDiv.appendChild(plusButton);
-                        cardDiv.appendChild(minusButton);
-                        buttonable[i].after(cardDiv);
-                    }
-
-
-                    // If you are the new owner display the radio buttons for selecting new max size
-                    let btn_div = document.createElement('div');
-                    btn_div.setAttribute('id', 'lobby-size-controls');
-
-                    let btn_pTag = document.createElement("p");
-                    btn_pTag.innerHTML = "Select Lobby Size:";
-                    btn_div.appendChild(btn_pTag);
-
-                    let second_btn_div = document.createElement('div');
-                    btn_div.appendChild(second_btn_div);
-
-                    for (let i = 5; i < 11; i++) {
-                        let label = document.createElement('label');
-
-                        // Create the radio input element
-                        let input = document.createElement('input');
-                        input.type = 'radio';
-                        input.name = 'lobbySize';
-                        input.value = i;
-                        input.setAttribute('onchange', `changeMaxsize(${i})`);
-
-                        // Only for first one
-                        if (i == 5) {
-                            input.checked = true;
-                        }
-                        
-                        // Append the input to the label
-                        label.appendChild(input);
-
-                        label.appendChild(document.createTextNode(`${i} Players`));
-
-                        second_btn_div.appendChild(label);
-                        second_btn_div.appendChild(document.createElement("br"));
-                    }
-
-                    // Display the start game button
-                    let start_btn = document.createElement("button");
-                    start_btn.textContent = "Start Game"
-                    start_btn.onclick = () => {startGame()};
-                    btn_div.appendChild(start_btn);
-
-                    // Finally add it to the body
-                    document.getElementById('body').appendChild(btn_div);
-
-                    
                     // Also make all images for the kick button clickable
                     let players = document.querySelectorAll(".individual-player");
                     
