@@ -294,11 +294,11 @@ function joinGameEJS(res, args) {
 // Args should be [<your username>, <host username>]
 function gameEJS(res, args) {
     // TODO: make the connection and this work together, so far we're under the assumption when this is called the game successfully started
-
     let index = searchArray(args[1], runningGames);
 
     // This is with the TODO and ensure the game is running when this is called
     if (index == -1) {
+        console.log("couldn't find game");
         res.status(404);
         return res.send("Attempting to access unknown files");
     }
@@ -409,7 +409,7 @@ app.post('/*', (req, res) => {
             break; 
         
         case '/game/game':
-            if (resolveEJS('views/game/game.ejs', res, [req.body.username])) {
+            if (resolveEJS('views/game/game.ejs', res, [req.body.username, req.body.owner])) {
                 res.status(404);
                 return res.send("Attempting to access unknown files");
             }
@@ -498,6 +498,34 @@ class GameAttributes {
             this._max_players = new_max;
             this._currentCardRatio = cardRatios[this._max_players];
         }
+    }
+
+    // Function to choose the random evils and goods
+    startGame() {
+        // Check if the game is ready to start
+        if (this._cur_players != this._max_players 
+            && this._goodCards.length == this._currentCardRatio[1]
+            && this._evilCards.length == this._currentCardRatio[0]) {
+            return false;
+        }
+        // These lists are equal by assumption above since the ratio of good + evil = max
+        let player_list = [this._name].concat(this.current_players);
+        let card_list = this._goodCards.concat(this._evilCards);
+
+        while (player_list.length > 0) {
+            // Pick random card and player
+            let randPlayer = Math.floor(Math.random() * player_list.length);
+            let randCard = Math.floor(Math.random() * card_list.length);
+
+            // Assign it
+            this._characterSelected[card_list[randCard]] = player_list[randPlayer];
+
+            // Decrement the list as we've assigned that player
+            player_list.splice(randPlayer, 1);
+            card_list.splice(randCard, 1);
+        }
+
+        return true;
     }
 
     addCard(cardName) {
