@@ -187,6 +187,10 @@ window.onload = function () {
                 startGame();
             
             case "update_cards":
+                // If you are the host don't recurse otherwise it'll add as much as it can
+                if (document.getElementById("owner").value == document.getElementById("username").value) {
+                    return;
+                }
                 let cardArgs = data[1].split(',');
                 let change = parseInt(cardArgs[1]);
 
@@ -199,6 +203,7 @@ window.onload = function () {
     // Initialize total card count
     updateTotalCardCount();
 };
+
 
 // Changes the max size of allowed players and notifies the server too
 function changeMaxsize(new_max_size) {
@@ -234,6 +239,7 @@ function leave() {
     document.getElementById('leaveGame').submit();
 }
 
+
 function startGame() {
     let num_players = document.getElementById('counter-display').innerHTML.split(' / ')[0];
     num_players = parseInt(num_players);
@@ -256,6 +262,7 @@ function startGame() {
     }
 }
 
+
 let goodCount = 2;
 let evilCount = 1;
 const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
@@ -273,14 +280,13 @@ function updateCardCount(cardName, change) {
     let currentAmount = parseInt(countDisplay.innerHTML.split("/")[0]);
     let maxAmount = parseInt(countDisplay.innerHTML.split("/")[1]);
 
-    if (currentAmount == 0 && change == -1) {
+    // Can't remove empty nor can you add full
+    if ((currentAmount == 0 && change == -1)
+        || (currentAmount >= maxAmount && change == 1)) {
         return;
     }
 
-    if (currentAmount >= maxAmount && change == 1) {
-        return;
-    }
-
+    // Bad cards case
     if (badCards.includes(cardName)) {
         // Check card ratios for evil to ensure balanced game
         if (cardRatios[maxPlayers][0] <= evilCount && change == 1) {
@@ -293,11 +299,9 @@ function updateCardCount(cardName, change) {
         countDisplay.innerHTML = `${currentAmount}/${maxAmount}`;
     }
 
+    // Good cards case
+    console.log("asdasd");
     if (goodCards.includes(cardName)) {
-
-        console.log(cardRatios[maxPlayers][1]);
-        console.log(maxPlayers);
-
         // Check card ratios for good to ensure balanced game
         if (cardRatios[maxPlayers][1] <= goodCount && change == 1) {
             return;
@@ -310,7 +314,7 @@ function updateCardCount(cardName, change) {
     }
 
     if (document.getElementById("owner").value == document.getElementById("username").value) {
-        socket.send("API card_update:" + [cardName, change, document.getElementById('owner').value].join(","));
+        socket.send("API card_update;" + [cardName, change, document.getElementById('owner').value].join(","));
     }
 
 }

@@ -117,9 +117,10 @@ wss.on('connection', (socket, request) => {
                 });
 
             case "card_update":
-
                 let cardArgs = data[1].split(',');
                 index = searchArray(cardArgs[2], notStartedGames);
+
+                // TODO: enforce that the addCard worked
 
                 if (index == -1) {
                     return;
@@ -135,7 +136,7 @@ wss.on('connection', (socket, request) => {
 
                 wss.clients.forEach((client) => {
                     if (client.room == "pregame" && client.lobby == cardArgs[2]) {
-                        client.send("API update_cards:" + cardArgs.join(','));
+                        client.send("API update_cards;" + cardArgs.join(','));
                     }
                 });
                 break;
@@ -495,7 +496,7 @@ class GameAttributes {
 
         // Check to see if desired added card is an evil card
         if (evilCardNames.includes(cardName)) {
-            if (this._currentCardRatio[0] >= this.evilCards.length) {
+            if (this._currentCardRatio[0] <= this._evilCards.length) {
                 return false;
             }
             else {
@@ -505,7 +506,7 @@ class GameAttributes {
 
         // Check to see if desired added card is an good card
         if (goodCardNames.includes(cardName)) {
-            if (this._currentCardRatio[1] >= this.goodCards.length) {
+            if (this._currentCardRatio[1] <= this._goodCards.length) {
                     return false;
             }
             else {

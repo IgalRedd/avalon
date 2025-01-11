@@ -66,10 +66,12 @@
                     <span>Merlin</span>
                     <span id="merlin-count" class="card-count">1/1</span>
                 </div>
+
                 <div class="card card-green">
                     <span>Percival</span>
                     <span id="percival-count" class="card-count">1/1</span>
                 </div>
+
                 <div class="card card-green">
                     <span class = "buttonable">Servants of Arthur</span>
                     <% if (game._name == myUsername) { %>
@@ -78,15 +80,17 @@
                         <button type="button" onclick="updateCardCount('ServantsofArthur', -1)">-</button>
                     </div>
                     <% } %>
-                    <span class="card-count" data-count="ServantsofArthur">0/5</span>
+                    <span class="card-count" data-count="ServantsofArthur"><%= game._goodCards.filter(elem => elem == "ServantsofArthur").length %>/5</span>
                 </div>
             </div>
+            
             <div class="column">
                 <div class="column-header">Evil</div>
                 <div class="card card-red">
                     <span>Assassin</span>
                     <span id="assassin-count" class="card-count">1/1</span>
                 </div>
+
                 <div class="card card-red">
                     <span class = "buttonable">Morgana</span>
                     <% if (game._name == myUsername) { %>
@@ -95,8 +99,9 @@
                         <button type="button" onclick="updateCardCount('Morgana', -1)">-</button>
                     </div>
                     <% } %>
-                    <span class="card-count" data-count="Morgana">0/1</span>
+                    <span class="card-count" data-count="Morgana"><%= game._evilCards.filter(elem => elem == "Morgana").length %>/1</span>
                 </div>
+
                 <div class="card card-red">
                     <span class = "buttonable">Oberon</span>
                     <% if (game._name == myUsername) { %> 
@@ -105,8 +110,9 @@
                         <button type="button" onclick="updateCardCount('Oberon', -1)">-</button>
                     </div>
                     <% } %>
-                    <span class="card-count" data-count="Oberon">0/1</span>
+                    <span class="card-count" data-count="Oberon"><%= game._evilCards.filter(elem => elem == "Oberon").length %>/1</span>
                 </div>
+
                 <div class="card card-red">
                     <span class = "buttonable">Mordred</span>
                     <% if (game._name == myUsername) { %> 
@@ -115,8 +121,9 @@
                         <button type="button" onclick="updateCardCount('Mordred', -1)">-</button>
                     </div>
                     <% } %>
-                    <span class="card-count" data-count="Mordred">0/1</span>
+                    <span class="card-count" data-count="Mordred"><%= game._evilCards.filter(elem => elem == "Mordred").length %>/1</span>
                 </div>
+
                 <div class="card card-red">
                     <span class = "buttonable">Minions of Mordred</span>
                     <% if (game._name == myUsername) { %> 
@@ -125,7 +132,7 @@
                         <button type="button" onclick="updateCardCount('MinionsofMordred', -1)">-</button>
                     </div>
                     <% } %>
-                    <span class="card-count" data-count="MinionsofMordred">0/3</span>
+                    <span class="card-count" data-count="MinionsofMordred"><%= game._evilCards.filter(elem => elem == "MinionsofMordred").length %>/3</span>
                 </div>
             </div>
         </div> 
