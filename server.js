@@ -464,8 +464,10 @@ class GameAttributes {
         this._goodCards = ["Merlin", "Percival"];
         this._evilCards = ["Assassin"];
 
+        this._missionRounds = [];
+
         // Empty until game starts
-        // This'll match cards to names of players
+        // This'll match names of players to cards
         this._characterSelected = {};
     }
 
@@ -529,6 +531,10 @@ class GameAttributes {
             player_list.splice(randPlayer, 1);
             card_list.splice(randCard, 1);
         }
+
+            // Call missionFormat() after the game starts missionRounds is updated
+            this.missionFormat();
+            console.log(this._missionRounds);
 
         return true;
     }
@@ -630,6 +636,16 @@ class GameAttributes {
         // Remove chosen new owner from play
         this.current_players.splice(0, 1);
         this._cur_players -= 1;
+    }
+
+    missionFormat() {
+        if (this.max_players == 5) {
+            this._missionRounds = [2, 3, 2, 3, 3];
+        } else if (this.max_players == 6) {
+            this._missionRounds = [2, 3, 4, 3, 4];
+        } else if (this.max_players >= 7 && this.max_players <= 10) {
+            this._missionRounds = [3, 4, 4, 5, 5];
+        }
     }
 
 }
