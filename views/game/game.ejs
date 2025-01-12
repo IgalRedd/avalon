@@ -145,11 +145,20 @@
                 </div>
 
                 <div id = "mission-selection" style="display: none;">
-                    <p id = "non-party-info">adsaDA</p>
+                    <p id = "non-party-info"></p>
                     <div id = "party-info">
                         <button onclick="missionVote(true)">Approve</button>
                         <button onclick="missionVote(false)">Reject</button>
                     </div>
+                </div>
+
+                <div id="winner-div" style="display: none;">
+                    <p id="evil-explainer" style="display: none;">Assassin, click on who you think Merlin is!</p>
+                    <h1 id="winnerText" style="display: none;">Good won!</h1>
+                    <p id="assassinate-text"></p>
+                    <form action="/" method="GET">
+                        <button type="submit" style="display: none;" id="leave-button">Leave</button>
+                    </form>
                 </div>
 
             </div>

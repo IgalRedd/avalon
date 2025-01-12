@@ -1,5 +1,5 @@
 let playerParty = [];
-let currentMission = 0; // TODO: add this to form adn dynmaically get it
+let currentMission = 0;
 
 // Set yourself as the leader
 function makeLeader() {
@@ -112,6 +112,10 @@ function setupRoundtable() {
     let missionSelectDiv = document.getElementById('mission-selection');
     missionSelectDiv.style.left = "33vh";
     missionSelectDiv.style.top = "28vh";
+
+    let winningDiv = document.getElementById('winner-div');
+    winningDiv.style.left = '22vh';
+    winningDiv.style.top = '28vh';
 }
 
 // To begin voting on the party
@@ -147,6 +151,11 @@ function missionVote(vote) {
     document.getElementById("party-info").style.display = 'none';
     document.getElementById("non-party-info").innerHTML = `You have voted to ${vote ? "approve" : "reject"}`;
 
+}
+
+function assassinate(name) {
+    // TODO: verify ur assassin?
+    socket.send("API assassinate;" + name);
 }
 
 const host = window.location.hostname;
@@ -252,7 +261,7 @@ window.onload = function() {
             case "party_accepted":
 
                 document.getElementById("party-selection").style.display = 'none';
-                document.getElementById("mission-selection").style.display = 'inline-block';
+                document.getElementById("mission-selection").style.display = 'flex';
 
                 if (!playerParty.includes(document.getElementById("username").value)) {
                     document.getElementById("party-info").style.display = 'none';
@@ -299,16 +308,76 @@ window.onload = function() {
 
                 playerParty = [];
 
-                document.getElementById("party-selection").style.display = 'inline-block';
+                document.getElementById("party-selection").style.display = 'flex';
                 document.getElementById("mission-selection").style.display = 'none';
                 document.getElementById("party-members").innerHTML = "";
                 document.getElementById("selection").innerHTML = "";
 
-                if (username == leaderName) {
+                if (username == leaderName && args[3] != 'true') {
                     socket.send("API give_new_leader;");   
                 }
 
                 break;
+
+            case "game_finished":
+                removeLeader();
+
+                document.getElementById('timer').innerHTML = '';
+
+                let passedArgs = data[1].split('@');
+                let dictionary = JSON.parse(passedArgs[1]);
+                const evils = ["Oberon", "Mordred", "Morgana", "MinionsofMordred", "Assassin"];
+
+                let players = document.querySelectorAll('.players');
+                for (let i = 0; i < players.length; i++) {
+                    if (evils.includes(dictionary[players[i].innerHTML].card)) {
+                        players[i].classList.add('evil-card');
+                    }
+                }
+
+                document.getElementById('party-selection').style.display = 'none';
+
+                document.getElementById('winner-div').style.display = 'flex';
+                if (passedArgs[0] == 'G') {
+                    document.getElementById('evil-explainer').style.display = 'inline-block';
+
+                    // If player is assassin then he can click on people to choose as Merlin
+                    if (dictionary[document.getElementById('username').value].card == "Assassin") {
+                        for (let i = 0; i < players.length; i++) {
+                            players[i].classList.add('clickable');
+                            players[i].onclick = () => {assassinate(players[i].innerHTML)};
+                        }
+                    }   
+                } else {
+                    document.getElementById('winnerText').style.display = 'inline-block';
+                    document.getElementById('winnerText').style.color = '#ad0505';
+                    document.getElementById('winnerText').innerHTML = "Evil won!"
+                    document.getElementById('leave-button').style.display = 'inline-block';
+                }
+
+                break;
+            
+            case "assassinate":
+                removeLeader(); // To make everyone unclickable for the assassin
+
+                let names = data[1].split(',');
+
+                // If assassin got it right
+                if (names[0] == names[1]) {
+                    document.getElementById('winnerText').style.display = 'inline-block';
+                    document.getElementById('winnerText').style.color = '#ad0505';
+                    document.getElementById('winnerText').innerHTML = "Evil won!"
+                    document.getElementById('leave-button').style.display = 'inline-block';
+                    document.getElementById('assassinate-text').innerHTML = `Merlin was ${names[1]} <br>Assassin chose: ${names[0]}`;
+                    return;
+                }
+
+                document.getElementById('winnerText').style.display = 'inline-block';
+                document.getElementById('winnerText').style.color = '#1c8c21';
+                document.getElementById('winnerText').innerHTML = "Good won!"
+                document.getElementById('leave-button').style.display = 'inline-block';
+                document.getElementById('assassinate-text').innerHTML = `Merlin was ${names[1]} <br>Assassin chose: ${names[0]}`;
+                return;
         }
     });
 }

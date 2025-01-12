@@ -149,3 +149,12 @@ html, body {
     justify-content: center;
     align-items: center;
 }
+
+#winner-div {
+    position: absolute;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

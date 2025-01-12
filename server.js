@@ -243,6 +243,38 @@ wss.on('connection', (socket, request) => {
                     }
                 });
 
+                if (game.evilWon() || game.goodWon()) {
+                    clearInterval(game.interval);
+
+                    let winner = game.evilWon() ? 'E' : 'G';
+                    wss.clients.forEach((client) => {
+                        if (client.room == "game" && client.lobby == socket.lobby) {
+                            client.send("API game_finished;" + [winner, JSON.stringify(game._characterSelected)].join('@'));
+                        }
+                    });
+
+                    if (winner == 'E') {
+                        runningGames.splice(index, 1);
+                        // TODO: remove names from list?
+                    }
+                }
+
+                break;
+            
+            case "assassinate":
+                index = searchArray(socket.lobby, runningGames);
+                game = runningGames[index];
+                
+                let merlinName = Object.keys(game._characterSelected).find(key => game._characterSelected[key].card == "Merlin");
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API assassinate;" + [data[1], merlinName].join(','));
+                    }
+                });
+
+                runningGames.splice(index, 1);
+                // TODO: remove names?
+
                 break;
         }
     });
@@ -604,6 +636,9 @@ class GameAttributes {
 
         // To store the interval
         this.interval = null;
+
+        // This is an array of 'E', 'G' for evil and good wins
+        this.history = [];
     }
 
     get currentCardRatio() {
@@ -898,13 +933,19 @@ class GameAttributes {
 
         // Return false if 
         if (rejectionVotes >= 1 && currentRound != 3) {
-            return [false, rejectionVotes, approvalVotes];
+            this.history.push('E');
+            let bool = this.evilWon() || this.goodWon();
+            return [false, rejectionVotes, approvalVotes, bool];
         }
         else if (rejectionVotes >=2 && currentRound == 3) {
-            return [false, rejectionVotes, approvalVotes];
+            this.history.push('E');
+            let bool = this.evilWon() || this.goodWon();
+            return [false, rejectionVotes, approvalVotes, bool];
         }
     
-        return [true, rejectionVotes, approvalVotes];
+        this.history.push('G');
+        let bool = this.evilWon() || this.goodWon();
+        return [true, rejectionVotes, approvalVotes, bool];
 
     }
 
@@ -937,6 +978,14 @@ class GameAttributes {
         // After setting a new leader the discussion period is started again
         this._newTime = discussionTime + scaleUpTime * this._currentRound;
         this._currentPeriod = periods[0];
+    }
+
+    evilWon() {
+        return this.history.filter(win => win == 'E').length >= 3;
+    }
+
+    goodWon() {
+        return this.history.filter(win => win == 'G').length >= 3;
     }
 
 }
