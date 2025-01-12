@@ -78,7 +78,7 @@ html, body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;    
+    align-items: center;
 }
 
 #game-space {
@@ -94,7 +94,7 @@ html, body {
     position: absolute;
 }
 
-#game-space p {
+.players {
     position: absolute;
 
     border: 6px solid #AA845A;
@@ -112,11 +112,31 @@ html, body {
 }
 
 .evil-card {
-    border: 6px solid #ad0505 !important;
-    background-color: #ad0505 !important;
+    border: 6px solid #ad0505;
+    background-color: #ad0505;
 }
 
 .good-card {
-    border: 6px solid #1c8c21 !important;
-    background-color: #1c8c21 !important;
+    border: 6px solid #1c8c21;
+    background-color: #1c8c21;
+}
+
+
+
+
+#party-selection {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#party-selection-info {
+    margin: 0;
+}
+
+.clickable {
+    cursor: pointer;
 }

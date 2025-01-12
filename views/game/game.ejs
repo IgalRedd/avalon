@@ -7,6 +7,17 @@
     </head>
 
     <body>
+        <form id="only-on-start">
+            <input type="hidden" value="<%= leader %>" id="only-on-start-value">
+        </form>
+
+        <form id="info">
+            <input type="hidden" value="<%= myUsername %>" id="username">
+            <input type="hidden" value="<%= leader %>" id="leader">
+            <input type="hidden" value="<%= game._missionRounds.join(',') %>" id="missionRounds">
+            
+        </form>
+
         <div id="left-side">
             <% for (let i = 0; i < game._missionRounds.length; i++) { %>
                 <div class="mission-ui">
@@ -113,11 +124,20 @@
                     }
                  %>
     
-                <p class="<%= showRoles(game._name) %>"><%= game._name %></p>
+                <p class="players <%= showRoles(game._name) %>"><%= game._name %></p>
                 
                 <% for (let i = 0; i < game._cur_players - 1; i++) { %>
-                    <p class="<%= showRoles(game.current_players[i]) %>"><%= game.current_players[i] %></p>
+                    <p class="players <%= showRoles(game.current_players[i]) %>"><%= game.current_players[i] %></p>
                 <% } %>
+
+                <div id="party-selection">
+                    <p id="party-selection-info">Party members:</p>
+                    <div id="party-members">
+
+                    </div>
+
+                    <button id="confirm-party" onclick="confirmParty()" style="display: none;">Confirm</button>
+                </div>
             </div>
         </div>
         

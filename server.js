@@ -304,7 +304,7 @@ function gameEJS(res, args) {
     }
 
     let game = runningGames[index];
-    res.render('game/game', {game: game, myUsername: args[0]});
+    res.render('game/game', {game: game, myUsername: args[0], leader: game._leader});
 }
 
 
@@ -465,6 +465,9 @@ class GameAttributes {
         this._evilCards = ["Assassin"];
 
         this._missionRounds = [];
+
+        // Leader starts as host
+        this._leader = name;
 
         // Empty until game starts
         // This'll match names of players to cards
