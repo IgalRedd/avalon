@@ -15,7 +15,8 @@
             <input type="hidden" value="<%= myUsername %>" id="username">
             <input type="hidden" value="<%= leader %>" id="leader">
             <input type="hidden" value="<%= game._missionRounds.join(',') %>" id="missionRounds">
-            
+            <input type="hidden" value="<%= game._name %>" id="owner">
+            <input type="hidden" value="<%= game._currentRound %>" id="currentRound">
         </form>
 
         <div id="left-side">
@@ -132,11 +133,16 @@
 
                 <div id="party-selection">
                     <p id="party-selection-info">Party members:</p>
-                    <div id="party-members">
-
-                    </div>
+                    <div id="party-members"></div>
 
                     <button id="confirm-party" onclick="confirmParty()" style="display: none;">Confirm</button>
+
+                    <div id="voting-buttons" style="display: none;">
+                        <button onclick="partyVote(true)">Approve</button>
+                        <button onclick="partyVote(false)">Reject</button>
+                    </div>
+
+                    <p id="selection" style="display: none;"></p>
                 </div>
             </div>
         </div>

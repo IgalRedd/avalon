@@ -37,6 +37,12 @@ wss.on('connection', (socket, request) => {
             socket.user = url.searchParams.get('username');
             socket.starting = false;
             break;
+        
+        case "/game":
+            socket.room = "game"
+            socket.lobby = url.searchParams.get('lobby');
+            socket.user = url.searchParams.get('username');
+            break;
     }
 
     socket.on('message', (message) => {
@@ -48,6 +54,7 @@ wss.on('connection', (socket, request) => {
         }
 
         let index = -1;
+        let game = null;
         switch(params[1]) {
             case "update_player_numbers":
                 // Get the game index
@@ -59,7 +66,7 @@ wss.on('connection', (socket, request) => {
                 }
 
                 // Get actual game and set the new max
-                let game = notStartedGames[index];
+                game = notStartedGames[index];
                 game.max_players = args[1];
 
                 // Tell the lobby players about it
@@ -91,8 +98,8 @@ wss.on('connection', (socket, request) => {
                     return;
                 }
 
-                let startingGame = notStartedGames[index];
-                if (!startingGame.startGame()) {
+                game = notStartedGames[index];
+                if (!game.startGame()) {
                     return;
                 }
 
@@ -102,7 +109,7 @@ wss.on('connection', (socket, request) => {
                 // Set the socket to be started
                 socket.starting = true;
                 // Update arrays
-                runningGames.push(startingGame);
+                runningGames.push(game);
                 notStartedGames.splice(index, 1);
 
                 // Update the other players
@@ -140,13 +147,53 @@ wss.on('connection', (socket, request) => {
                 });
                 break;
 
-            case "player_selection":
-                // Handle host selecting players for a given mission. Call to our vote handling functions will occur when host submits their final team
-                // Can choose to handle amount of players selected here or in our methods
+            case "add_player_party":
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API add_player_party;" + data[1]);
+                    }
+                });
                 break;
 
-            case "player_vote":
-                // Handle players voting on team proposed by host. If a majority of votes approve, then this team will be sent on the mission
+            case "remove_player_party":
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API remove_player_party;" + data[1]);
+                    }
+                });
+                break;
+
+            case "party_confirmed":
+                let players = data[1].split(',');
+
+                index = searchArray(socket.lobby, runningGames);
+                game = runningGames[index]; 
+
+                game.missionPlayers = players;
+
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API start_vote;");
+                    }
+                });
+                break;
+
+            case "party_vote":
+                index = searchArray(socket.lobby, runningGames);
+                game = runningGames[index];
+
+                let vote = (data[1] == 'true' ? "approve" : "reject");
+                // Check if the final vote was the deciding one
+                let rtn = game.vote(vote); 
+                if (rtn == '') {
+                    return;
+                }
+
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API party_decision;" + rtn);
+                    }
+                });
                 break;
 
             case "mission_success":
@@ -479,17 +526,19 @@ class GameAttributes {
         this._evilCards = ["Assassin"];
 
         this._missionRounds = [];
+        this._missionPlayers = [];
+        this._missionStatus = [];
 
         // Leader starts as host
         this._leader = name;
-
-        this._missionStatus = [];
 
         this._currentRound = 0;
 
         // Empty until game starts
         // This'll match names of players to cards
         this._characterSelected = {};
+
+        this._votes = [];
     }
 
     get currentCardRatio() {
@@ -521,6 +570,10 @@ class GameAttributes {
             this._max_players = new_max;
             this._currentCardRatio = cardRatios[this._max_players];
         }
+    }
+
+    set missionPlayers(players) {
+        this._missionPlayers = players;
     }
 
     // Function to choose the random evils and goods
@@ -555,7 +608,6 @@ class GameAttributes {
 
             // Call missionFormat() after the game starts missionRounds is updated
             this.missionFormat();
-            console.log(this._missionRounds);
 
         return true;
     }
@@ -667,6 +719,16 @@ class GameAttributes {
         } else if (this.max_players >= 7 && this.max_players <= 10) {
             this._missionRounds = [3, 4, 4, 5, 5];
         }
+    }
+
+    vote(vote) {
+        this._votes.push(vote);
+
+        if (this._votes.length != this._max_players) {
+            return '';
+        }
+
+        return this.missionVote(this._votes) ? "Approved" : "Rejected";
     }
 
     missionVote(votes) {

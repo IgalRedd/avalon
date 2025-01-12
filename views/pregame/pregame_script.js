@@ -103,7 +103,6 @@ window.onload = function () {
     socket = new WebSocket(`ws://${host + port}/pregame?lobby=${owner}&username=${username}`);
 
     socket.addEventListener('message', (message) => {
-        // TODO: someone leaves, change of owner, updating new players
         let data = message.data.split(';');
         let params = data[0].split(' ');
     

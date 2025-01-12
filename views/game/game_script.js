@@ -30,10 +30,6 @@ function click(name) {
     let username = document.getElementById('username').value;
     let leaderName = document.getElementById('leader').value;
 
-    if (username != leaderName) {
-        return;
-    }
-
     if (playerParty.includes(name)) {
         let index = playerParty.indexOf(name);
         playerParty.splice(index, 1);
@@ -47,12 +43,13 @@ function click(name) {
             }
         }
 
-        // TODO: send to server to tell others
+        if (username == leaderName) {
+            socket.send("API remove_player_party;" + name);
+        }
         return;
     }
 
     let missionSize = parseInt(document.getElementById('missionRounds').value.split(',')[currentMission]);
-    console.log(missionSize);
     if (playerParty.length >= missionSize) {
         return; // Party size too big, can't add
     }
@@ -62,7 +59,10 @@ function click(name) {
     let pTag = document.createElement('p');
     pTag.innerHTML = name;
     partyHTML.appendChild(pTag);
-    // TODO: inform server + add it to HMTL
+
+    if (username == leaderName) {
+        socket.send("API add_player_party;" + name);
+    }
 }
 
 function confirmParty() {
@@ -74,7 +74,7 @@ function confirmParty() {
         return;
     }
 
-    ; // TODO: send to server and wait for it to tell us to start the voting
+    socket.send("API party_confirmed;" + playerParty.join(','));
 }
 
 function setupRoundtable() {
@@ -99,7 +99,42 @@ function setupRoundtable() {
     partySelectDiv.style.top = "28vh";
 }
 
+// To begin voting on the party
+function startVote() {
+    removeLeader();
+
+    document.getElementById('voting-buttons').style.display = 'inline-block'
+}
+
+function partyVote(vote) {
+    socket.send("API party_vote;" + vote);
+
+    document.getElementById('voting-buttons').style.display = 'none';
+    let voteText = document.getElementById('selection');
+    voteText.style.display = 'inline-block';
+    
+    if (vote) {
+        voteText.innerHTML = "Accepted";
+        voteText.style.color = '#1c8c21';
+    } else {
+        voteText.innerHTML = "Rejected";
+        voteText.style.color = '#ad0505';
+    }
+}
+
+function voteRejected() {
+    // TODO: display it, wait 10ish secs then remove leader if u are and wait for server to tell us who new leader is
+}
+
+const host = window.location.hostname;
+// Need to do this for port since if its default port an empty string with : would break the URL
+const port = window.location.port ? `:${window.location.port}` : '';
+
+let socket = null;
+
 window.onload = function() {
+    currentMission = parseInt(document.getElementById('currentRound').value);
+
     setupRoundtable();
 
     let username = document.getElementById('username').value;
@@ -116,4 +151,44 @@ window.onload = function() {
             }
         }
     }
+
+    let owner = document.getElementById('owner').value;
+    socket = new WebSocket(`ws://${host + port}/game?lobby=${owner}&username=${username}`);
+
+    socket.addEventListener('message', (message) => {
+        let data = message.data.split(';');
+        let params = data[0].split(' ');
+    
+        if (params[0] !== "API") {
+            return;
+        }
+
+        switch(params[1]) {
+            case "add_player_party":
+                if (username == leaderName) {
+                    return;
+                }
+                click(data[1]);
+                break;
+
+            case "remove_player_party":
+                if (username == leaderName) {
+                    return;
+                }
+                click(data[1]);
+                break;
+
+            case "start_vote":
+                startVote();
+                break;
+
+            case "party_decision":
+                console.log(data[1]);
+                // if (data[1] == "Rejected") {
+                //     voteRejected();
+                //     return;
+                // }
+                break;
+        }
+    });
 }
