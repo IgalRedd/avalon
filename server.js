@@ -139,6 +139,20 @@ wss.on('connection', (socket, request) => {
                     }
                 });
                 break;
+
+            case "player_selection":
+                // Handle host selecting players for a given mission. Call to our vote handling functions will occur when host submits their final team
+                // Can choose to handle amount of players selected here or in our methods
+                break;
+
+            case "player_vote":
+                // Handle players voting on team proposed by host. If a majority of votes approve, then this team will be sent on the mission
+                break;
+
+            case "mission_success":
+                // Handle actual mission succcess depending on number of approve/reject votes by players in the mission (i.e 1 reject should fail for all
+                // rounds except round 4)
+                break;
         }
     });
 
@@ -469,6 +483,10 @@ class GameAttributes {
         // Leader starts as host
         this._leader = name;
 
+        this._missionStatus = [];
+
+        this._currentRound = 0;
+
         // Empty until game starts
         // This'll match names of players to cards
         this._characterSelected = {};
@@ -649,6 +667,52 @@ class GameAttributes {
         } else if (this.max_players >= 7 && this.max_players <= 10) {
             this._missionRounds = [3, 4, 4, 5, 5];
         }
+    }
+
+    missionVote(votes) {
+        // votes is an array of "approve" or "reject" strings, which are determined by individual players choosing to either confirm or reject the proposed team for a mission
+        let approvalVotes = 0;
+        let rejectionVotes = 0;
+    
+        // Loop through the votes array and count approval and rejection votes
+        // Implementing it this way allows votes to come in in any order without having to sort.
+        for (let vote of votes) {
+            if (vote === "approve") {
+                approvalVotes++;
+            } else if (vote === "reject") {
+                rejectionVotes++;
+            }
+        }
+    
+        // Return false if rejection votes are strictly greater than approval votes (need majority to pass)
+        if (rejectionVotes > approvalVotes) {
+            return false;
+        }
+    
+        return true;
+    }
+
+    missionSuccess(votes, currentRound) {
+        let approvalVotes = 0;
+        let rejectionVotes = 0;
+    
+        for (let vote of votes) {
+            if (vote === "approve") {
+                approvalVotes++;
+            } else if (vote === "reject") {
+                rejectionVotes++;
+            }
+        }
+    
+        // Return false if 
+        if (rejectionVotes >= 1 && currentRound != 3) {
+            return [false, rejectionVotes, approvalVotes];
+        }
+        else if (rejectionVotes >=2 && currentRound == 3) {
+            return [false, rejectionVotes, approvalVotes];
+        }
+    
+        return [true, rejectionVotes, approvalVotes];
     }
 
 }
