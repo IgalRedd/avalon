@@ -315,8 +315,9 @@ function isValidUsername(username) {
     username = username.trim();
 
     // Check username for invalid characters
-    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')) {
-        return "Error: '<', '>', ':' and ';' symbols are not accepted.";
+    if (username.includes('<') || username.includes('>') || username.includes(';') || username.includes(':')
+        || username.includes('@') || username.includes(',') || username.includes(' ') || username.includes('\n') || username.includes('\r')) {
+        return "Error: '<', '>', ':', ';', @, space, and newline characters are not accepted.";
     }
 
     // Check username for invalid length
