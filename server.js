@@ -208,20 +208,41 @@ wss.on('connection', (socket, request) => {
                 if (rtn == "Rejected") {
                     game.nextLeader();
                 }
+                else {
+                    game._newTime = missionVoteTime;
+                    game._currentPeriod = periods[2];
+                }
         
                 wss.clients.forEach((client) => {
                     if (client.room == "game" && client.lobby == socket.lobby) {
                         if (rtn == "Rejected") {
                             client.send("API party_rejected;" + game._leader);
                         }
-                        client.send("API party_decision;" + rtn);
+                        else {
+                            client.send("API party_accepted;");
+                        }
                     }
                 });
                 break;
 
-            case "mission_success":
-                // Handle actual mission succcess depending on number of approve/reject votes by players in the mission (i.e 1 reject should fail for all
-                // rounds except round 4)
+            case "mission_vote":
+                index = searchArray(socket.lobby, runningGames);
+                game = runningGames[index];
+
+                let missionVote = (data[1] == 'true' ? "approve" : "reject");
+
+                let missionReturn = game.missionVote(missionVote);
+
+                if (missionReturn == '') {
+                    return;
+                }
+
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API mission_voted;" + missionReturn.join(','));
+                    }
+                });
+
                 break;
         }
     });
@@ -562,6 +583,7 @@ class GameAttributes {
         this._missionRounds = [];
         this._missionPlayers = [];
         this._missionStatus = [];
+        this._missionVotes = [];
 
         // Leader starts as host
         this._leader = name;
@@ -821,10 +843,10 @@ class GameAttributes {
             return '';
         }
 
-        return this.missionVote(this._votes) ? "Approved" : "Rejected";
+        return this.partyVote(this._votes) ? "Approved" : "Rejected";
     }
 
-    missionVote(votes) {
+    partyVote(votes) {
         // votes is an array of "approve" or "reject" strings, which are determined by individual players choosing to either confirm or reject the proposed team for a mission
         let approvalVotes = 0;
         let rejectionVotes = 0;
@@ -839,12 +861,23 @@ class GameAttributes {
             }
         }
     
+        this._votes = [];
         // Return false if rejection votes are strictly greater than approval votes (need majority to pass)
         if (rejectionVotes > approvalVotes) {
             return false;
         }
     
         return true;
+    }
+
+    missionVote(vote) {
+        this._missionVotes.push(vote);
+
+        if (this._missionVotes.length != this._missionPlayers.length) {
+            return "";
+        }
+
+        return this.missionSuccess(this._missionVotes, this._currentRound);
     }
 
     missionSuccess(votes, currentRound) {
@@ -859,6 +892,10 @@ class GameAttributes {
             }
         }
     
+        this._currentRound += 1;
+
+        this._missionVotes = [];
+
         // Return false if 
         if (rejectionVotes >= 1 && currentRound != 3) {
             return [false, rejectionVotes, approvalVotes];
@@ -868,6 +905,7 @@ class GameAttributes {
         }
     
         return [true, rejectionVotes, approvalVotes];
+
     }
 
     nextLeader() {
@@ -876,7 +914,7 @@ class GameAttributes {
             this._leader = this.current_players[0];
 
             // After setting a new leader the discussion period is started again
-            this._newTime = discussionTime;
+            this._newTime = discussionTime + scaleUpTime * this._currentRound;
             this._currentPeriod = periods[0];
             return;
         }
@@ -889,7 +927,7 @@ class GameAttributes {
             this._leader = this._name;
 
             // After setting a new leader the discussion period is started again
-            this._newTime = discussionTime;
+            this._newTime = discussionTime + scaleUpTime * this._currentRound;
             this._currentPeriod = periods[0];
             return;
         } 
@@ -897,7 +935,7 @@ class GameAttributes {
         this._leader = this.current_players[index];
 
         // After setting a new leader the discussion period is started again
-        this._newTime = discussionTime;
+        this._newTime = discussionTime + scaleUpTime * this._currentRound;
         this._currentPeriod = periods[0];
     }
 

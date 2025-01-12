@@ -108,6 +108,10 @@ function setupRoundtable() {
     let partySelectDiv = document.getElementById('party-selection');
     partySelectDiv.style.left = "33vh";
     partySelectDiv.style.top = "28vh";
+
+    let missionSelectDiv = document.getElementById('mission-selection');
+    missionSelectDiv.style.left = "33vh";
+    missionSelectDiv.style.top = "28vh";
 }
 
 // To begin voting on the party
@@ -131,6 +135,18 @@ function partyVote(vote) {
         voteText.innerHTML = "Rejected";
         voteText.style.color = '#ad0505';
     }
+}
+
+function missionVote(vote) {
+    if (!playerParty.includes(document.getElementById("username").value)) {
+        return;
+    }
+
+    socket.send("API mission_vote;" + vote);
+
+    document.getElementById("party-info").style.display = 'none';
+    document.getElementById("non-party-info").innerHTML = `You have voted to ${vote ? "approve" : "reject"}`;
+
 }
 
 const host = window.location.hostname;
@@ -196,6 +212,13 @@ window.onload = function() {
                             partyVote(true); // Default accept
                         }
                         break;
+                    case periods[2]:
+                        if (playerParty.includes(document.getElementById("username").value)) {
+                            if (document.getElementById('party-info').style.display != 'none') {
+                                missionVote(true);
+                            }
+                        }
+                        break;
                 }
                 break;
         
@@ -224,6 +247,67 @@ window.onload = function() {
                 setTimeout(() => {
                     document.getElementById('informative').innerHTML = '';
                 }, 15000);
+                break;
+
+            case "party_accepted":
+
+                document.getElementById("party-selection").style.display = 'none';
+                document.getElementById("mission-selection").style.display = 'inline-block';
+
+                if (!playerParty.includes(document.getElementById("username").value)) {
+                    document.getElementById("party-info").style.display = 'none';
+                    document.getElementById("non-party-info").innerHTML = "Party members are voting on mission, please wait";
+                }
+
+                else {
+                    document.getElementById("non-party-info").innerHTML = "Please vote to Accept or Reject the mission";
+                    document.getElementById("party-info").style.display = 'inline-block';
+                }
+
+                break;
+            
+            case "mission_voted":
+                let args = data[1].split(',');
+
+                let missions = document.querySelectorAll("p[data-mission]");
+
+                for (let i = 0; i < missions.length; i++) {
+                    if (missions[i].getAttribute("data-mission") == currentMission.toString()) {
+                        let text = `<span style='color: #1c8c21;'>${args[2]}</span> vs <span style='color: #ad0505;'>${args[1]}</span><br>`;
+                        for (let j = 0; j < playerParty.length; j++) {
+                            text += `${playerParty[j]}<br>`;
+                        }
+                        missions[i].innerHTML = text;
+                        break;
+                    }
+                }
+
+                let missionDisplays = document.querySelectorAll("div[data-mission]");
+
+                for (let i = 0; i < missionDisplays.length; i++) {
+                    if (missionDisplays[i].getAttribute("data-mission") == currentMission.toString()) {
+                        if (args[0] == "true") {
+                            missionDisplays[i].classList.add("mission-passed");
+                        }
+                        else {
+                            missionDisplays[i].classList.add("mission-failed");
+                        }
+                    }
+                }
+
+                currentMission += 1;
+
+                playerParty = [];
+
+                document.getElementById("party-selection").style.display = 'inline-block';
+                document.getElementById("mission-selection").style.display = 'none';
+                document.getElementById("party-members").innerHTML = "";
+                document.getElementById("selection").innerHTML = "";
+
+                if (username == leaderName) {
+                    socket.send("API give_new_leader;");   
+                }
+
                 break;
         }
     });

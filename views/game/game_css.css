@@ -140,3 +140,12 @@ html, body {
 .clickable {
     cursor: pointer;
 }
+
+#mission-selection {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
