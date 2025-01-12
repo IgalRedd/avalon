@@ -1,3 +1,5 @@
+let leader = 0;
+
 function setupRoundtable() {
     let space = document.getElementById('game-space');
     let tags = space.querySelectorAll('p');
@@ -14,6 +16,8 @@ function setupRoundtable() {
         tags[i].style.left = `${x + rad}vh`;
         tags[i].style.top = `${y + rad}vh`;
     }
+
+    tags[leader].style.fontWeight = 'bold';
 }
 
 window.onload = function() {
