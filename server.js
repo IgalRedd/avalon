@@ -171,9 +171,25 @@ wss.on('connection', (socket, request) => {
 
                 game.missionPlayers = players;
 
+                game._newTime = partyVoteTime;
+                game._currentPeriod = periods[1];
+
                 wss.clients.forEach((client) => {
                     if (client.room == "game" && client.lobby == socket.lobby) {
                         client.send("API start_vote;");
+                    }
+                });
+                break;
+
+            case "give_new_leader":
+                index = searchArray(socket.lobby, runningGames);
+                game = runningGames[index];
+
+                game.nextLeader();
+
+                wss.clients.forEach((client) => {
+                    if (client.room == "game" && client.lobby == socket.lobby) {
+                        client.send("API new_leader;" + game._leader);
                     }
                 });
                 break;
@@ -189,8 +205,15 @@ wss.on('connection', (socket, request) => {
                     return;
                 }
 
+                if (rtn == "Rejected") {
+                    game.nextLeader();
+                }
+        
                 wss.clients.forEach((client) => {
                     if (client.room == "game" && client.lobby == socket.lobby) {
+                        if (rtn == "Rejected") {
+                            client.send("API party_rejected;" + game._leader);
+                        }
                         client.send("API party_decision;" + rtn);
                     }
                 });
@@ -500,6 +523,17 @@ const goodCardNames = ["Merlin", "Percival","ServantsofArthur"];
 // First element is EVIL, second is GOOD
 const cardRatios = {5:[2,3], 6:[2,4], 7:[3,4], 8:[3,5], 9:[3,6], 10:[4,6]};
 
+// How much time is for discussion and to confirm a party
+const discussionTime = 180;
+// How much time everyone has to accept and reject a party
+const partyVoteTime = 30;
+// How much time the people in the party have to vote on the mission
+const missionVoteTime = 30;
+// How much more time each new mission gets
+const scaleUpTime = 10;
+
+const periods = ["Discussion", "PartyVoting", "MissionVoting"];
+
 // Searches given array of games (important) by name
 // Returns index or -1
 function searchArray(gameName, array) {
@@ -539,6 +573,15 @@ class GameAttributes {
         this._characterSelected = {};
 
         this._votes = [];
+
+        // Time left is the current period
+        this._timeLeft;
+        this._newTime = -1;
+        // What we are doing right now, (eg: discussion, vote...)
+        this._currentPeriod;
+
+        // To store the interval
+        this.interval = null;
     }
 
     get currentCardRatio() {
@@ -576,6 +619,49 @@ class GameAttributes {
         this._missionPlayers = players;
     }
 
+    // This function is called every 1s to update the timer and inform if something needs to happen
+    timerHandler() {
+        let msg = '';
+
+        if (this._newTime != -1) {
+            this._timeLeft = this._newTime;
+            this._newTime = -1;
+        }
+
+        if (this._timeLeft == -1) {
+            // Time ran out so inform the clients
+            wss.clients.forEach((client) => {
+                if (client.room == "game" && client.lobby == this._name) {
+                    client.send("API timeout;" + this._currentPeriod);
+                }
+            });
+
+            return;
+        }
+
+        // Get message
+        switch(this._currentPeriod) {
+            case "Discussion":
+                msg = `Time Left: ${this._timeLeft} seconds for discussion`;
+                break;
+
+            case "PartyVoting":
+                msg = `Time Left: ${this._timeLeft} seconds for party voting`;
+                break;
+            
+            case "MissionVoting":
+                msg = `Time Left: ${this._timeLeft} seconds for mission voting`
+        }
+
+        this._timeLeft -= 1;
+
+        wss.clients.forEach((client) => {
+            if (client.room == "game" && client.lobby == this._name) {
+                client.send("API timer_update;" + msg);
+            }
+        });
+    }
+
     // Function to choose the random evils and goods
     startGame() {
         // Check if the game is ready to start
@@ -606,8 +692,15 @@ class GameAttributes {
             card_list.splice(randCard, 1);
         }
 
-            // Call missionFormat() after the game starts missionRounds is updated
-            this.missionFormat();
+        // Call missionFormat() after the game starts missionRounds is updated
+        this.missionFormat();
+
+        // - 1 to account for the extra second it takes to load it
+        this._timeLeft = discussionTime - 1;
+        this._currentPeriod = periods[0];
+
+        // Call the timer handler every second
+        this.interval = setInterval(() => {this.timerHandler()}, 1000);
 
         return true;
     }
@@ -775,6 +868,37 @@ class GameAttributes {
         }
     
         return [true, rejectionVotes, approvalVotes];
+    }
+
+    nextLeader() {
+        // If leader is host
+        if (this._leader == this._name) {
+            this._leader = this.current_players[0];
+
+            // After setting a new leader the discussion period is started again
+            this._newTime = discussionTime;
+            this._currentPeriod = periods[0];
+            return;
+        }
+
+        let index = this.current_players.indexOf(this._leader);
+        index = (index + 1) % this.current_players.length;
+
+        // Wrap around
+        if (index == 0) {
+            this._leader = this._name;
+
+            // After setting a new leader the discussion period is started again
+            this._newTime = discussionTime;
+            this._currentPeriod = periods[0];
+            return;
+        } 
+
+        this._leader = this.current_players[index];
+
+        // After setting a new leader the discussion period is started again
+        this._newTime = discussionTime;
+        this._currentPeriod = periods[0];
     }
 
 }

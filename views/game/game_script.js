@@ -3,14 +3,24 @@ let currentMission = 0; // TODO: add this to form adn dynmaically get it
 
 // Set yourself as the leader
 function makeLeader() {
+    let username = document.getElementById('username').value;
+    let leaderName = document.getElementById('leader').value;
     let players = document.querySelectorAll('.players');
 
     for (let i = 0; i < players.length; i++) {
-        players[i].onclick = () => {click(players[i].innerHTML)};
-        players[i].classList.add("clickable");
+        if (players[i].innerHTML == leaderName) {
+            players[i].style.fontWeight = 'bold';
+        }
+
+        if (username == leaderName) {
+            players[i].onclick = () => {click(players[i].innerHTML)};
+            players[i].classList.add("clickable");
+        }
     }
 
-    document.getElementById("confirm-party").style.display = 'inline-block';
+    if (username == leaderName) {
+        document.getElementById("confirm-party").style.display = 'inline-block';
+    }
 }
 
 // Remove yourself as a leader
@@ -19,6 +29,7 @@ function removeLeader() {
 
     // Remove clickability
     for (let i = 0; i < players.length; i++) {
+        players[i].style.fontWeight = 'normal';
         players[i].onclick = null;
         players[i].classList.remove("clickable");
     }
@@ -122,10 +133,6 @@ function partyVote(vote) {
     }
 }
 
-function voteRejected() {
-    // TODO: display it, wait 10ish secs then remove leader if u are and wait for server to tell us who new leader is
-}
-
 const host = window.location.hostname;
 // Need to do this for port since if its default port an empty string with : would break the URL
 const port = window.location.port ? `:${window.location.port}` : '';
@@ -136,21 +143,7 @@ window.onload = function() {
     currentMission = parseInt(document.getElementById('currentRound').value);
 
     setupRoundtable();
-
-    let username = document.getElementById('username').value;
-    let leaderName = document.getElementById('leader').value;
-    if (username == leaderName) {
-        makeLeader();
-
-        let players = document.querySelectorAll('.players');
-        for (let i = 0; i < players.length; i++) {
-            // Searches for you to bold your name
-            if (username == players[i].innerHTML) {
-                players[i].style.fontWeight = 'bold';
-                break;
-            }
-        }
-    }
+    makeLeader();
 
     let owner = document.getElementById('owner').value;
     socket = new WebSocket(`ws://${host + port}/game?lobby=${owner}&username=${username}`);
@@ -163,6 +156,8 @@ window.onload = function() {
             return;
         }
 
+        let username = document.getElementById('username').value;
+        let leaderName = document.getElementById('leader').value;
         switch(params[1]) {
             case "add_player_party":
                 if (username == leaderName) {
@@ -182,12 +177,53 @@ window.onload = function() {
                 startVote();
                 break;
 
-            case "party_decision":
-                console.log(data[1]);
-                // if (data[1] == "Rejected") {
-                //     voteRejected();
-                //     return;
-                // }
+            case "timer_update":
+                document.getElementById('timer').innerHTML = data[1];
+                break;
+
+            case "timeout":
+                const periods = ["Discussion", "PartyVoting", "MissionVoting"];
+                switch (data[1]) {
+                    case periods[0]:
+                        // Leader couldn't decide on a party fast enough
+                        if (username == leaderName) {
+                            socket.send("API give_new_leader;");
+                        }
+                        break;
+
+                    case periods[1]:
+                        if (document.getElementById('voting-buttons').style.display != 'none') {
+                            partyVote(true); // Default accept
+                        }
+                        break;
+                }
+                break;
+        
+            case "new_leader":
+                // Set new leader
+                document.getElementById('leader').value = data[1];
+                // Remove old leader and set new one
+                removeLeader();
+                makeLeader();
+                break;
+
+            case "party_rejected":
+                // Set new leader
+                document.getElementById('leader').value = data[1];
+                // Remove old leader and set new one
+                removeLeader();
+                makeLeader();
+
+                // Clear out the vote, party and party display
+                document.getElementById('selection').innerHTML = '';
+                playerParty = [];
+                document.getElementById('party-members').innerHTML = '';
+
+                document.getElementById('informative').innerHTML = "Party rejected!";
+                // After 15 seconds remove the text
+                setTimeout(() => {
+                    document.getElementById('informative').innerHTML = '';
+                }, 15000);
                 break;
         }
     });

@@ -7,10 +7,6 @@
     </head>
 
     <body>
-        <form id="only-on-start">
-            <input type="hidden" value="<%= leader %>" id="only-on-start-value">
-        </form>
-
         <form id="info">
             <input type="hidden" value="<%= myUsername %>" id="username">
             <input type="hidden" value="<%= leader %>" id="leader">
@@ -20,6 +16,8 @@
         </form>
 
         <div id="left-side">
+            <h2 id="timer">Time Left: 180 seconds for discussion</h2>
+
             <% for (let i = 0; i < game._missionRounds.length; i++) { %>
                 <div class="mission-ui">
                     <div class="mission" data-mission="<%= i %>">
@@ -132,6 +130,7 @@
                 <% } %>
 
                 <div id="party-selection">
+                    <p id="informative" style="color: #ad0505;"></p>
                     <p id="party-selection-info">Party members:</p>
                     <div id="party-members"></div>
 
@@ -142,7 +141,7 @@
                         <button onclick="partyVote(false)">Reject</button>
                     </div>
 
-                    <p id="selection" style="display: none;"></p>
+                    <p id="selection"></p>
                 </div>
             </div>
         </div>
