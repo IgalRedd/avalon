@@ -255,7 +255,11 @@ wss.on('connection', (socket, request) => {
 
                     if (winner == 'E') {
                         runningGames.splice(index, 1);
-                        // TODO: remove names from list?
+
+                        storedUsernames = storedUsernames.filter(username => {
+                            // Exclude usernames that are in current_players or match the host's name
+                            return !game.current_players.includes(username) && username !== game.name;
+                        });
                     }
                 }
 
@@ -273,7 +277,11 @@ wss.on('connection', (socket, request) => {
                 });
 
                 runningGames.splice(index, 1);
-                // TODO: remove names?
+
+                storedUsernames = storedUsernames.filter(username => {
+                    // Exclude usernames that are in current_players or match the host's name
+                    return !game.current_players.includes(username) && username !== game.name;
+                });
 
                 break;
         }
