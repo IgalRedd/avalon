@@ -875,7 +875,9 @@ class GameAttributes {
             this._missionRounds = [2, 3, 2, 3, 3];
         } else if (this.max_players == 6) {
             this._missionRounds = [2, 3, 4, 3, 4];
-        } else if (this.max_players >= 7 && this.max_players <= 10) {
+        } else if (this.max_players == 7 ) {
+            this._missionRounds = [2, 3, 3, 4, 4];
+        } else if (this.max_players > 7 && this.max_players <= 10) {
             this._missionRounds = [3, 4, 4, 5, 5];
         }
     }
