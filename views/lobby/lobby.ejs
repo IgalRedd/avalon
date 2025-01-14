@@ -14,7 +14,7 @@
         <label>Enter User Name</label>
 
         <form action="/pregame/new_game" method="post" id="newGameForm">
-            <input type="text" id="username" name="username" class="item">
+            <input type="text" id="username" name="username" class="item" autocomplete="off">
             <div id="error-message" style="color: red;"> <%= errorMessage %></div>
         </form>
 

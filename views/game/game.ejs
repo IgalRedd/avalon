@@ -1,10 +1,168 @@
 <!DOCTYPE html>
 <html>
     <head>
-
+        <link rel="stylesheet" href="/game/game_css.css">
+        <script src="/game/game_script.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </head>
 
     <body>
-        <p>Hello World!</p>
+        <form id="info">
+            <input type="hidden" value="<%= myUsername %>" id="username">
+            <input type="hidden" value="<%= leader %>" id="leader">
+            <input type="hidden" value="<%= game._missionRounds.join(',') %>" id="missionRounds">
+            <input type="hidden" value="<%= game._name %>" id="owner">
+            <input type="hidden" value="<%= game._currentRound %>" id="currentRound">
+        </form>
+
+        <div id="left-side">
+            <h2 id="timer">Time Left: 180 seconds for discussion</h2>
+
+            <% for (let i = 0; i < game._missionRounds.length; i++) { %>
+                <div class="mission-ui">
+                    <div class="mission" data-mission="<%= i %>">
+                        <p><%= game._missionRounds[i] %></p>
+                    </div>
+
+                    <div class="names-wrapper">
+                        <p class="names-paragraph" data-mission="<%= i %>"></p>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <div id="right-side">
+            <p><%= myUsername %>, You are: 
+                <span class="<%= game._characterSelected[myUsername].className %>">
+                    <% 
+                        let card = game._characterSelected[myUsername].card;
+                        if (card === "ServantsofArthur") {
+                            card = "Servant of Arthur";
+                        } else if (card === "MinionsofMordred") {
+                            card = "Minion of Mordred";
+                        }
+                    %>
+                    <%= card %>
+                </span>
+            </p>
+    
+            <%
+                let textDisplay = '';
+                
+                switch(game._characterSelected[myUsername].card) {
+                    case "Merlin":
+                        textDisplay = "As Merlin the people in red are the Agents of Mordred, thus are evil. Work with Percival to thwart their plans!";
+                        break;
+    
+                    case "Percival":
+                        textDisplay = "As Percival the people in green are possible Merlins. Deduce who is trustworthy and work with Merlin to thwart Mordred's plans!";
+                        break;
+    
+                    case "ServantsofArthur":
+                        textDisplay = 'As a Servant of Arthur deduce who is trustworthy and who is not, prevent evil from succeeding.'
+                        break;
+    
+                    case "Oberon":
+                        textDisplay = "You are an Agent of Mordred, your special power is that you aren't revealed to other evils nor do you know them."
+                        break;
+    
+                    case "Mordred":
+                        textDisplay = "You are Mordred, your special power is that you aren't revealed to Merlin!";
+                        break;
+                    
+                    case "Morgana":
+                        textDisplay = "You are an Agent of Mordred, your special power is that Percival perceives you as Merlin; use that to sow distrust.";
+                        break;
+    
+                    case "MinionsofMordred":
+                        textDisplay = "You are a Minion of Mordred, work alongside your fellow agents to thwart King Arthur's plans!";
+                        break;
+                    
+                    case "Assassin":
+                        textDisplay = "You are an Agent of Mordred, your special power is if good wins at the end of the game you can change fate by assassinating Merlin by deducing his identity."
+                        break;
+    
+                    default:
+                        textDisplay = "How did you get here?";
+                        break;
+                }
+            %>
+    
+            <p><%= textDisplay %></p>
+    
+            <div id="game-space">
+                <% 
+                    let evils = game._evilCards;
+    
+                    // Will return the style to show a player is evil if the name is evil and current player should see it
+                    function showRoles(name) {
+                        let role = game._characterSelected[myUsername].card;
+                        let other_role = game._characterSelected[name].card;
+    
+                        // So Oberon can see himself as evil
+                        if (role == other_role && role == "Oberon") {
+                            return 'evil-card';
+                        }
+    
+                        // Merlin sees evil except Mordred
+                        if (role == "Merlin" && (evils.filter(card => card != "Mordred")).includes(other_role)) {
+                            return 'evil-card';
+                        }
+                        
+                        let non_oberons = evils.filter(card => card != "Oberon");
+                        if (non_oberons.includes(role) && non_oberons.includes(other_role)) {
+                            return 'evil-card';
+                        }
+    
+                        // Percival should see Merlin and Morgana
+                        if (role == "Percival" && ["Merlin", "Morgana"].includes(other_role)) {
+                            return 'good-card'
+                        }
+    
+                        return '';
+                    }
+                 %>
+    
+                <p class="players <%= showRoles(game._name) %>"><%= game._name %></p>
+                
+                <% for (let i = 0; i < game._cur_players - 1; i++) { %>
+                    <p class="players <%= showRoles(game.current_players[i]) %>"><%= game.current_players[i] %></p>
+                <% } %>
+
+                <div id="party-selection">
+                    <p id="informative" style="color: #ad0505;"></p>
+                    <p id="party-selection-info">Party members:</p>
+                    <div id="party-members"></div>
+
+                    <button id="confirm-party" onclick="confirmParty()" style="display: none;">Confirm</button>
+
+                    <div id="voting-buttons" style="display: none;">
+                        <button onclick="partyVote(true)">Approve</button>
+                        <button onclick="partyVote(false)">Reject</button>
+                    </div>
+
+                    <p id="selection"></p>
+                </div>
+
+                <div id = "mission-selection" style="display: none;">
+                    <p id = "non-party-info"></p>
+                    <div id = "party-info">
+                        <button onclick="missionVote(true)">Approve</button>
+                        <button onclick="missionVote(false)">Reject</button>
+                    </div>
+                </div>
+
+                <div id="winner-div" style="display: none;">
+                    <p id="evil-explainer" style="display: none;">Assassin, click on who you think Merlin is!</p>
+                    <h1 id="winnerText" style="display: none;">Good won!</h1>
+                    <p id="assassinate-text"></p>
+                    <form action="/" method="GET">
+                        <button type="submit" style="display: none;" id="leave-button">Leave</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        
     </body>
 </html>

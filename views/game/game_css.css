@@ -1,0 +1,160 @@
+html, body {
+    height: 95%;
+    width: 95%;
+
+    display: flex;
+}
+
+#left-side {
+    width: 20%;
+    margin-left: 5vw;
+    margin-right: 5vw;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; 
+}
+
+.mission p {
+    margin: 0;
+}
+
+.mission-ui {
+    display: flex;
+}
+
+.names-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.names-paragraph {
+    width: 16ch;
+}
+
+.mission {
+    border: 1px solid #AA845A;
+    background-color: #AA845A;
+    border-radius: 50%;
+    padding: 16px;
+
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    margin-left: 1vw;
+    margin-right: 1vw;
+}
+
+.mission-passed {
+    border: 1px solid #1c8c21;
+    background-color: #1c8c21;
+    border-radius: 50%;
+    padding: 16px;
+
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    margin-left: 1vw;
+    margin-right: 1vw;
+}
+
+.mission-failed {
+    border: 1px solid #ad0505;
+    background-color: #ad0505;
+    border-radius: 50%;
+    padding: 16px;
+
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+    margin-left: 1vw;
+    margin-right: 1vw;
+}
+
+#right-side {
+    height: 100%;
+    width: 80%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-space {
+    position: relative;
+    width: 75vh;
+    height: 75vh;
+
+    border: 2px solid black;
+    border-radius: 50%;
+}
+
+#leader {
+    position: absolute;
+}
+
+.players {
+    position: absolute;
+
+    border: 6px solid #AA845A;
+    background-color: #AA845A;
+    border-radius: 40%;
+    padding: 3px;
+}
+
+.good {
+    color: green;
+}
+
+.evil {
+    color: red;
+}
+
+.evil-card {
+    border: 6px solid #ad0505;
+    background-color: #ad0505;
+}
+
+.good-card {
+    border: 6px solid #1c8c21;
+    background-color: #1c8c21;
+}
+
+
+
+
+#party-selection {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#party-selection-info {
+    margin: 0;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+#mission-selection {
+    position: absolute;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#winner-div {
+    position: absolute;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
